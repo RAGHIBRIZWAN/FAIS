@@ -1,0 +1,374 @@
+/* ============================================
+   LANDING PAGE — Dark Dungeon Intro
+   Matches reference: stone arch, torch flames,
+   corridor glow, minimal CTA
+   ============================================ */
+
+/* ── Root ── */
+.lp-root {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #080604;
+}
+
+/* ── Background image ── */
+.lp-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/dungeon_bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  /* Slight zoom-in subtle animation */
+  animation: lp-bg-breathe 20s ease-in-out infinite alternate;
+}
+
+@keyframes lp-bg-breathe {
+  from { transform: scale(1.00); }
+  to   { transform: scale(1.04); }
+}
+
+/* ── Overlays ── */
+.lp-vignette-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(4,3,2,0.92) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.lp-vignette-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 40%;
+  background: linear-gradient(0deg, rgba(4,3,2,0.95) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.lp-vignette-sides {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(3,2,1,0.75) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Stone arch ── */
+/* We simulate the arch frame with an inset border/shadow */
+.lp-arch {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 120px rgba(0,0,0,0.8);
+  border-radius: 0;
+  z-index: 3;
+  pointer-events: none;
+  /* inner arch hint via clip */
+  background:
+    /* top arch shadow */
+    radial-gradient(ellipse 80% 30% at 50% -10%, rgba(0,0,0,0.6) 0%, transparent 100%),
+    /* left pillar */
+    linear-gradient(90deg, rgba(0,0,0,0.55) 0%, transparent 14%),
+    /* right pillar */
+    linear-gradient(270deg, rgba(0,0,0,0.55) 0%, transparent 14%);
+}
+
+/* ── Torches ── */
+.lp-torch {
+  position: absolute;
+  top: 28%;
+  z-index: 6;
+}
+
+.lp-torch-left  { left:  clamp(20px, 6vw, 90px); }
+.lp-torch-right { right: clamp(20px, 6vw, 90px); }
+
+/* Torch structure */
+.torch-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.torch-stick {
+  width: 6px;
+  height: clamp(40px, 7vh, 70px);
+  background: linear-gradient(180deg, #5a3510 0%, #2a1a08 100%);
+  border-radius: 3px;
+  position: relative;
+  z-index: 2;
+}
+
+.torch-stick::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -4px;
+  width: 14px;
+  height: 10px;
+  background: #3a2208;
+  border-radius: 2px;
+}
+
+/* Flame group sits on top of stick */
+.torch-flame-group {
+  position: absolute;
+  bottom: calc(100% - 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 52px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.torch-flame {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%;
+}
+
+.torch-flame--outer {
+  width: 30px;
+  height: 48px;
+  background: radial-gradient(ellipse at 50% 80%, #e85a1e 0%, #c04010 30%, #7a2008 70%, transparent 100%);
+  opacity: 0.85;
+}
+
+.torch-flame--mid {
+  width: 20px;
+  height: 36px;
+  background: radial-gradient(ellipse at 50% 80%, #f5c030 0%, #e88020 40%, #c04010 80%, transparent 100%);
+}
+
+.torch-flame--inner {
+  width: 10px;
+  height: 22px;
+  background: radial-gradient(ellipse at 50% 80%, #fff8d0 0%, #f5e060 50%, #f5c030 100%);
+}
+
+/* Glow halo around flame */
+.torch-glow {
+  position: absolute;
+  bottom: calc(100% - 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(240,150,30,0.5) 0%, transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+/* ── Torch light pools on floor ── */
+.lp-light-left,
+.lp-light-right {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  width: clamp(80px, 15vw, 180px);
+  height: clamp(80px, 15vw, 180px);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(220,120,20,0.18) 0%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+  animation: lp-flicker 2s ease-in-out infinite;
+}
+
+.lp-light-left  { left:  clamp(0px, 3vw, 60px); }
+.lp-light-right { right: clamp(0px, 3vw, 60px); }
+
+@keyframes lp-flicker {
+  0%, 100% { opacity: 0.8; }
+  30%       { opacity: 1;   }
+  60%       { opacity: 0.7; }
+  80%       { opacity: 0.95; }
+}
+
+/* ── Center corridor glow ── */
+.lp-center-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(80px, 15vw, 160px);
+  height: clamp(80px, 15vw, 160px);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(140,170,220,0.15) 0%, transparent 70%);
+  filter: blur(30px);
+  z-index: 3;
+  pointer-events: none;
+  animation: lp-center-pulse 4s ease-in-out infinite;
+}
+
+@keyframes lp-center-pulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* ── Content ── */
+.lp-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 20px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  user-select: none;
+}
+
+.lp-content--visible {
+  opacity: 1;
+}
+
+/* ── Title ── */
+.lp-title {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-weight: 900;
+  font-size: clamp(2.2rem, 7vw, 5.5rem);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #e8d5b0;
+  /* Stone texture via text-shadow stack */
+  text-shadow:
+    0   2px  4px rgba(0,0,0,0.9),
+    0   4px 12px rgba(0,0,0,0.7),
+    0   0   30px rgba(220,180,100,0.15),
+    /* Embossed stone edges */
+    1px 1px 0   rgba(255,240,200,0.12),
+   -1px -1px 0  rgba(0,0,0,0.6);
+  filter: drop-shadow(0 0 40px rgba(200,160,80,0.12));
+  margin-bottom: 0;
+}
+
+/* ── Subtitle row ── */
+.lp-subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.lp-divider-line {
+  display: block;
+  width: clamp(30px, 6vw, 80px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(180,150,90,0.6), transparent);
+}
+
+.lp-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.55rem, 1.5vw, 0.85rem);
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #9c8060;
+  white-space: nowrap;
+}
+
+/* ── CTA Button ── */
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 2vh, 14px) clamp(28px, 5vw, 52px);
+  background: rgba(14, 10, 6, 0.75);
+  border: 1px solid rgba(160, 130, 70, 0.55);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease;
+  /* slight bevel shadow matching stone UI */
+  box-shadow:
+    0  1px 0  rgba(200,170,100,0.12) inset,
+    0 -1px 0  rgba(0,0,0,0.5) inset,
+    0  4px 20px rgba(0,0,0,0.6);
+  outline: none;
+  backdrop-filter: blur(4px);
+}
+
+/* Outer decorative frame lines */
+.lp-btn::before,
+.lp-btn::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(160,130,70,0.2);
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+
+.lp-btn::after {
+  inset: 6px;
+  border-color: rgba(160,130,70,0.1);
+}
+
+.lp-btn--hovered {
+  background: rgba(30, 22, 10, 0.85);
+  border-color: rgba(200,160,80,0.75);
+  box-shadow:
+    0  1px 0  rgba(220,180,100,0.15) inset,
+    0 -1px 0  rgba(0,0,0,0.5) inset,
+    0  0  30px rgba(180,130,40,0.25),
+    0  4px 30px rgba(0,0,0,0.6);
+}
+
+.lp-btn--hovered::before {
+  border-color: rgba(200,160,80,0.3);
+}
+
+.lp-btn-text {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.65rem, 1.8vw, 0.88rem);
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #c8b07a;
+  position: relative;
+  z-index: 2;
+  transition: color 0.3s ease;
+}
+
+.lp-btn--hovered .lp-btn-text {
+  color: #e8d098;
+}
+
+/* Hover shimmer sweep */
+.lp-btn--hovered::before {
+  animation: btn-shimmer 0.6s ease forwards;
+}
+
+@keyframes btn-shimmer {
+  from { background: linear-gradient(90deg, transparent 0%, rgba(255,220,100,0.06) 50%, transparent 100%) left; background-size: 200% 100%; }
+  to   { background-position: right; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .lp-torch-left  { left: 8px; }
+  .lp-torch-right { right: 8px; }
+  .torch-stick    { height: 40px; }
+  .lp-title       { font-size: 2.2rem; }
+  .lp-subtitle    { letter-spacing: 0.2em; font-size: 0.55rem; }
+  .lp-btn         { padding: 10px 28px; }
+}
