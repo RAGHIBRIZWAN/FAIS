@@ -76,7 +76,7 @@
 .r1-room-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/dungeon_room.png');
+  background-image: url('/images/round1.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -175,15 +175,12 @@
 /* ── Window hotspot ── */
 .r1-window-hotspot {
   position: absolute;
-  /* Positioned at the window area — right side of the room ~68% from left, ~20% from top */
-  right: 14%;
-  top: 18%;
-  width: clamp(80px, 10vw, 130px);
-  height: clamp(80px, 10vw, 130px);
+  /* Placed over the tall window on the right side of the room */
+  left: 66%;
+  top: 5%;
+  width: 8%;
+  height: 40%;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 15;
 }
 
@@ -238,15 +235,18 @@
   padding: 22px 28px;
   max-width: 760px;
   width: 100%;
-  max-height: 88vh;
+  max-height: 90vh;
   overflow-y: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212,160,23,0.5) transparent;
   box-shadow:
     0 0 60px rgba(0,0,0,0.85),
     0 0 40px rgba(180, 130, 30, 0.1);
   position: relative;
 }
-.r1-lock-modal::-webkit-scrollbar { display: none; }
+.r1-lock-modal::-webkit-scrollbar { width: 8px; }
+.r1-lock-modal::-webkit-scrollbar-track { background: transparent; }
+.r1-lock-modal::-webkit-scrollbar-thumb { background: rgba(212,160,23,0.5); border-radius: 4px; }
 
 .r1-lock-modal::before {
   content: '';
@@ -296,10 +296,12 @@
 }
 
 .r1-lock-img {
-  width: clamp(160px, 25vw, 260px);
-  height: clamp(160px, 25vw, 260px);
+  width: 100%;
+  max-width: 650px;
+  height: auto;
+  max-height: 55vh;
   object-fit: contain;
-  filter: drop-shadow(0 0 20px rgba(180, 130, 30, 0.4));
+  filter: drop-shadow(0 0 30px rgba(180, 130, 30, 0.5));
 }
 
 .r1-lock-placeholder {
@@ -369,6 +371,13 @@
   grid-template-columns: 1fr 1.6fr;
   gap: 20px;
   align-items: start;
+}
+
+/* Single-column variant (no hints panel) */
+.r1-submit-body--single {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 @media (max-width: 640px) {
@@ -578,80 +587,3 @@
   font-weight: 900;
 }
 
-/* ══════════════ BOTTOM BAR ══════════════ */
-.r1-bottombar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  background: linear-gradient(0deg, rgba(8,6,3,0.96), rgba(4,3,2,0.92));
-  border-top: 1px solid rgba(80, 55, 20, 0.45);
-  position: relative;
-  z-index: 20;
-}
-
-.r1-bottombar::before {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; top: -1px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.45), transparent);
-  pointer-events: none;
-}
-
-.r1-bar-btn {
-  flex: 1;
-  max-width: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 10px 16px;
-  background: none;
-  border: none;
-  border-right: 1px solid rgba(80, 55, 20, 0.3);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.r1-bar-btn:last-child { border-right: none; }
-.r1-bar-btn:hover { background: rgba(212,160,23,0.05); }
-
-.r1-bar-icon  { font-size: 1.1rem; }
-.r1-bar-label {
-  font-family: var(--font-heading);
-  font-size: 0.55rem;
-  letter-spacing: 0.2em;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-}
-
-/* ── Hint toast ── */
-.r1-hint-toast {
-  position: absolute;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(10, 7, 4, 0.95);
-  border: 1px solid rgba(212, 160, 23, 0.35);
-  border-radius: 6px;
-  padding: 12px 16px;
-  font-size: 0.78rem;
-  color: var(--color-text-dim);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  white-space: nowrap;
-  z-index: 25;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-}
-
-.r1-hint-close {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}

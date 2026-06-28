@@ -7,8 +7,6 @@ export default function Round1Page({ gameState, onComplete }) {
   // Phase: 'explore' → 'lock' → 'submit' → 'result'
   const [phase, setPhase] = useState('explore')
   const [windowFound, setWindowFound] = useState(false)
-  const [showHint, setShowHint] = useState(false)
-  const [showClue, setShowClue] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [dragOver, setDragOver] = useState(false)
@@ -75,42 +73,6 @@ export default function Round1Page({ gameState, onComplete }) {
         {/* ── Darkness overlay ── */}
         <div className="r1-room-overlay" />
 
-        {/* ── Instruction card (top-left) — hidden by default, opened manually ── */}
-        <AnimatePresence>
-          {phase === 'explore' && !showClue && (
-            <motion.button
-              className="r1-clue-toggle"
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.35 }}
-              onClick={() => setShowClue(true)}
-            >
-              <span className="r1-clue-toggle-icon">📖</span>
-              <span className="r1-clue-toggle-label">Instructions</span>
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {phase === 'explore' && showClue && (
-            <motion.div
-              className="r1-clue-card"
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.35 }}
-            >
-              <button className="r1-clue-close" onClick={() => setShowClue(false)} aria-label="Close instructions">✕</button>
-              <p className="r1-clue-text">
-                Find the window that can be opened.
-              </p>
-              <p className="r1-clue-sub">
-                Look carefully. The key is hidden.
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* ── Clickable Window hotspot ── */}
         {phase === 'explore' && (
@@ -119,25 +81,7 @@ export default function Round1Page({ gameState, onComplete }) {
             onClick={handleWindowClick}
             title="Examine the window"
             animate={pulseWindow ? {} : {}}
-          >
-            {/* Dashed pulsing ring */}
-            <motion.div
-              className="r1-window-ring"
-              animate={{
-                scale: [1, 1.12, 1],
-                opacity: [0.7, 1, 0.7],
-              }}
-              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            {/* Magnifier icon */}
-            <motion.div
-              className="r1-magnifier"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-            >
-              🔍
-            </motion.div>
-          </motion.div>
+          />
         )}
 
         {/* ── Window-found flash ── */}
@@ -174,14 +118,15 @@ export default function Round1Page({ gameState, onComplete }) {
                 {phase === 'lock' && (
                   <div className="r1-lock-view">
                     <div className="r1-modal-header">
-                      <span className="font-heading r1-modal-title">🔒 Something catches your eye…</span>
-                      <p className="r1-modal-hint">Could this open the window?</p>
+                      <span className="font-heading r1-modal-title">⚙️ Something catches your eye…</span>
+                      <p className="r1-modal-hint">A complex mechanical lock seals the window.</p>
                     </div>
 
                     <motion.div
                       className="r1-lock-img-wrap"
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
                     >
                       <img
                         src="/images/lock.png"
@@ -206,14 +151,9 @@ export default function Round1Page({ gameState, onComplete }) {
 
                     <div className="r1-modal-body">
                       <p className="r1-modal-desc">
-                        An ancient padlock seals the window. To open it, you must generate
-                        the <strong style={{ color: 'var(--color-gold)' }}>exact key</strong> that fits this lock.
+                        A mechanical lock seals the window. Study its gem-stone slots and pin tumblers, then generate the
+                        <strong style={{ color: 'var(--color-gold)' }}> exact key</strong> that fits this lock.
                       </p>
-                      <div className="r1-clue-chips">
-                        {['🗝️ Skeleton key', '🟡 Golden color', '⚙️ 3 teeth', '✨ Sharp edges'].map(c => (
-                          <span key={c} className="r1-chip">{c}</span>
-                        ))}
-                      </div>
                     </div>
 
                     <motion.button
@@ -235,27 +175,7 @@ export default function Round1Page({ gameState, onComplete }) {
                       <p className="r1-modal-hint">Generate a key image using an AI tool and upload it below</p>
                     </div>
 
-                    <div className="r1-submit-body">
-                      {/* Left — lock reminder */}
-                      <div className="r1-lock-thumb-wrap">
-                        <img src="/images/lock.png" alt="Lock" className="r1-lock-thumb"
-                          onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='block' }} />
-                        <div style={{ display: 'none', fontSize: '3rem', textAlign: 'center' }}>🔒</div>
-                        <p className="r1-lock-label">Target Lock</p>
-                        <div className="r1-key-hints">
-                          {[
-                            ['Shape', 'Skeleton / Antique'],
-                            ['Color', 'Golden / Brass'],
-                            ['Teeth', '3 rectangular cuts'],
-                            ['Bg', 'Dark / High contrast'],
-                          ].map(([k, v]) => (
-                            <div key={k} className="r1-key-hint-row">
-                              <span className="r1-key-hint-label">{k}</span>
-                              <span className="r1-key-hint-val">{v}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                    <div className="r1-submit-body r1-submit-body--single">
 
                       {/* Right — upload */}
                       <div className="r1-upload-area">
@@ -412,36 +332,6 @@ export default function Round1Page({ gameState, onComplete }) {
 
       </div>{/* end scene-wrap */}
 
-      {/* ══════════════ BOTTOM BAR ══════════════ */}
-      <div className="r1-bottombar">
-        <button className="r1-bar-btn" onClick={() => setShowHint(h => !h)}>
-          <span className="r1-bar-icon">💡</span>
-          <span className="r1-bar-label">HINT</span>
-        </button>
-        <button className="r1-bar-btn">
-          <span className="r1-bar-icon">🎒</span>
-          <span className="r1-bar-label">INVENTORY</span>
-        </button>
-        <button className="r1-bar-btn">
-          <span className="r1-bar-icon">📝</span>
-          <span className="r1-bar-label">NOTES</span>
-        </button>
-      </div>
-
-      {/* Hint tooltip */}
-      <AnimatePresence>
-        {showHint && (
-          <motion.div
-            className="r1-hint-toast"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-          >
-            💡 Look for the glowing circle on the right side of the room — that's your window!
-            <button onClick={() => setShowHint(false)} className="r1-hint-close">✕</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
     </div>
   )
