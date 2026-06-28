@@ -158,11 +158,11 @@
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: center;
-  gap: 14px;
-  padding: 60px 24px 70px;
+  gap: clamp(20px, 2.5vw, 40px);
+  padding: 60px 5vw 70px;
+  z-index: 5;
 }
 
 .r2-encounter-bg {
@@ -182,17 +182,28 @@
     radial-gradient(ellipse at 30% 50%, rgba(80,20,20,0.22) 0%, transparent 60%);
 }
 
-/* Attacker figure positioned left */
+/* Attacker figure — flex child, fills available height, sits next to right column */
 .r2-attacker-wrap {
-  position: absolute;
-  left: 0;
-  top: 44px;
-  bottom: 44px;
-  width: 42%;
+  position: relative;
+  flex: 1 1 0;
+  max-width: 640px;
+  min-width: 280px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   z-index: 10;
+}
+
+/* Right column wrapper — clue + upload kept close, balanced height */
+.r2-right-col {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  width: min(380px, 32vw);
+  flex-shrink: 0;
 }
 
 .r2-attacker-img {
@@ -231,8 +242,8 @@
   background: rgba(12, 9, 5, 0.9);
   border: 1px solid rgba(160,120,50,0.4);
   border-radius: 8px;
-  padding: 16px;
-  width: min(300px, 32vw);
+  padding: 18px 20px;
+  width: 100%;
   box-shadow: 0 8px 32px rgba(0,0,0,0.65);
   backdrop-filter: blur(6px);
 }
@@ -293,12 +304,12 @@
   background: rgba(12, 9, 5, 0.9);
   border: 1px solid rgba(100,70,20,0.4);
   border-radius: 8px;
-  padding: 14px;
-  width: min(300px, 32vw);
+  padding: 16px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 12px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.65);
   backdrop-filter: blur(6px);
 }
@@ -312,14 +323,14 @@
 
 .r2-dropzone {
   width: 100%;
-  height: 90px;
+  height: 130px;
   border: 1px dashed rgba(120,85,25,0.5);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
   background: rgba(0,0,0,0.3);
   transition: all 0.2s ease;
@@ -352,7 +363,7 @@
 
 .r2-upload-preview-img {
   width: 100%;
-  height: 90px;
+  height: 130px;
   object-fit: cover;
   display: block;
 }

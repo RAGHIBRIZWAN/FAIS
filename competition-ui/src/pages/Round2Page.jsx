@@ -180,7 +180,9 @@ export default function Round2Page({ gameState, onComplete }) {
               <div className="r2-attacker-glow" />
             </motion.div>
 
-            {/* ── Clue card (center-right) ── */}
+            {/* ── Right column: clue + upload (kept together) ── */}
+            <div className="r2-right-col">
+            {/* ── Clue card ── */}
             <motion.div
               className="r2-clue-card"
               initial={{ opacity: 0, y: 20 }}
@@ -251,6 +253,7 @@ export default function Round2Page({ gameState, onComplete }) {
                 ⚔️ Analyze Weapon
               </motion.button>
             </motion.div>
+            </div>
 
             {/* ── Player health (bottom) ── */}
             <div className="r2-player-health-bar">
@@ -296,7 +299,7 @@ export default function Round2Page({ gameState, onComplete }) {
                   ) : (
                     <div className="r2-weapon-placeholder">🗡️</div>
                   )}
-                  <div className="r2-weapon-scan-line" />
+                  {analyzing && <div className="r2-weapon-scan-line" />}
                 </div>
 
                 {/* Analyze button / progress */}
