@@ -8,6 +8,7 @@ export default function Round1Page({ gameState, onComplete }) {
   const [phase, setPhase] = useState('explore')
   const [windowFound, setWindowFound] = useState(false)
   const [showHint, setShowHint] = useState(false)
+  const [showClue, setShowClue] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [dragOver, setDragOver] = useState(false)
@@ -74,16 +75,33 @@ export default function Round1Page({ gameState, onComplete }) {
         {/* ── Darkness overlay ── */}
         <div className="r1-room-overlay" />
 
-        {/* ── Instruction card (top-left) ── */}
+        {/* ── Instruction card (top-left) — hidden by default, opened manually ── */}
         <AnimatePresence>
-          {phase === 'explore' && (
+          {phase === 'explore' && !showClue && (
+            <motion.button
+              className="r1-clue-toggle"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.35 }}
+              onClick={() => setShowClue(true)}
+            >
+              <span className="r1-clue-toggle-icon">📖</span>
+              <span className="r1-clue-toggle-label">Instructions</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {phase === 'explore' && showClue && (
             <motion.div
               className="r1-clue-card"
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.35 }}
             >
+              <button className="r1-clue-close" onClick={() => setShowClue(false)} aria-label="Close instructions">✕</button>
               <p className="r1-clue-text">
                 Find the window that can be opened.
               </p>

@@ -8,7 +8,7 @@
 .lp-root {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,6 +259,12 @@
    -1px -1px 0  rgba(0,0,0,0.6);
   filter: drop-shadow(0 0 40px rgba(200,160,80,0.12));
   margin-bottom: 0;
+  animation: lp-title-flicker 6s ease-in-out infinite;
+}
+
+@keyframes lp-title-flicker {
+  0%, 100% { filter: drop-shadow(0 0 40px rgba(200,160,80,0.12)); }
+  50%       { filter: drop-shadow(0 0 55px rgba(200,160,80,0.20)); }
 }
 
 /* ── Subtitle row ── */
@@ -351,6 +357,11 @@
 
 .lp-btn--hovered .lp-btn-text {
   color: #e8d098;
+}
+
+.lp-btn:focus-visible {
+  outline: 2px solid rgba(200,160,80,0.7);
+  outline-offset: 4px;
 }
 
 /* Hover shimmer sweep */

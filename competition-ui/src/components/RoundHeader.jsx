@@ -48,7 +48,7 @@ export default function RoundHeader({ round, title, subtitle, timer, right }) {
           )}
         </div>
       </div>
-      <div style={{ display: 'flex', align: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {timer}
         {right}
       </div>

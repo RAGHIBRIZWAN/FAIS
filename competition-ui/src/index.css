@@ -41,10 +41,15 @@
   --color-success:   #27ae60;
   --color-danger:    #c0392b;
 
+  /* AI / cyber accent — used for analysis, scanning, progress */
+  --color-accent:    #4fd1c5;
+  --color-accent-dim:#1a6b66;
+
   /* Shadows & Glows */
   --glow-gold:  0 0 20px rgba(212,160,23,0.4), 0 0 60px rgba(212,160,23,0.15);
   --glow-ember: 0 0 20px rgba(232,90,30,0.5), 0 0 60px rgba(232,90,30,0.2);
   --glow-green: 0 0 20px rgba(46,204,113,0.4);
+  --glow-accent: 0 0 20px rgba(79,209,197,0.4), 0 0 60px rgba(79,209,197,0.12);
 
   /* Typography */
   --font-display: 'Cinzel Decorative', serif;
@@ -65,7 +70,7 @@
 
 html, body {
   height: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 body {
@@ -77,14 +82,27 @@ body {
 }
 
 #root {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::selection {
+  background: rgba(212,160,23,0.3);
+  color: #fff8e0;
+}
+
+/* Scrollbar — slim, auto-fading, only visible when needed */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(120,85,25,0.35);
+  border-radius: 3px;
+}
 ::-webkit-scrollbar-thumb:hover { background: var(--color-gold-dim); }
+
+/* Hide scrollbar entirely while keeping scroll capability */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /* ============================
    UTILITY CLASSES
@@ -173,10 +191,17 @@ body {
   border: none;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: all var(--transition-med);
+  transition: transform var(--transition-fast), box-shadow var(--transition-med), background var(--transition-med), border-color var(--transition-med);
   position: relative;
   overflow: hidden;
   text-decoration: none;
+}
+
+.btn:active { transform: translateY(1px) scale(0.99); }
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-gold-light);
+  outline-offset: 2px;
 }
 
 .btn::before {
@@ -272,7 +297,7 @@ body {
 }
 
 .progress-analysis .progress-fill {
-  background: linear-gradient(90deg, #1a5c8c, #3498db, #2ecc71);
+  background: linear-gradient(90deg, #1a5c8c, var(--color-accent), #2ecc71);
   background-size: 200% auto;
   animation: shimmer 2s linear infinite;
 }
@@ -320,11 +345,12 @@ body {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  padding: 6px 12px;
-  background: rgba(0,0,0,0.7);
+  padding: 6px 14px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-heading);
+  box-shadow: inset 0 1px 0 rgba(212,160,23,0.06);
 }
 
 .timer-label {
@@ -339,9 +365,18 @@ body {
   font-weight: 700;
   color: var(--color-gold);
   letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
 }
 
-.timer-value.danger { color: var(--color-ember); }
+.timer-value.danger {
+  color: var(--color-ember);
+  animation: timer-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
 
 /* ============================
    UPLOAD ZONE
@@ -353,7 +388,7 @@ body {
   padding: 24px;
   text-align: center;
   cursor: pointer;
-  transition: all var(--transition-med);
+  transition: border-color var(--transition-med), background var(--transition-med), box-shadow var(--transition-med), transform var(--transition-fast);
   background: rgba(0,0,0,0.3);
 }
 
@@ -361,6 +396,7 @@ body {
   border-color: var(--color-gold);
   background: rgba(212,160,23,0.05);
   box-shadow: var(--glow-gold);
+  transform: translateY(-1px);
 }
 
 .upload-zone input[type="file"] {

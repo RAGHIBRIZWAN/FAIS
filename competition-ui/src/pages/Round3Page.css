@@ -16,12 +16,21 @@
   top: 0; left: 0; right: 0;
   z-index: 30;
   padding: 10px 16px;
-  background: rgba(4,3,2,0.92);
+  background: linear-gradient(180deg, rgba(8,6,3,0.96), rgba(4,3,2,0.92));
   border-bottom: 1px solid rgba(80,55,20,0.5);
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 44px;
+}
+
+.r3-topbar::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.55), transparent);
+  pointer-events: none;
 }
 
 .r3-round-title {
@@ -223,14 +232,14 @@
 
 /* LEFT — Briefing */
 .r3-mission-brief {
-  padding: 22px 20px;
+  padding: 20px 22px;
   background: rgba(5,3,2,0.88);
   border-right: 1px solid rgba(120,85,25,0.3);
   backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  overflow-y: auto;
+  gap: 12px;
+  overflow: hidden;
   z-index: 10;
 }
 
@@ -258,6 +267,24 @@
   letter-spacing: 0.22em;
   color: var(--color-text-muted);
   text-transform: uppercase;
+}
+
+.r3-brief-hidden-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(0,0,0,0.4);
+  border: 1px dashed rgba(120,85,25,0.4);
+  border-radius: 8px;
+}
+
+.r3-brief-hidden-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+.r3-brief-hidden-text {
+  font-size: 0.74rem;
+  color: var(--color-text-dim);
+  line-height: 1.6;
 }
 
 .r3-brief-items {
@@ -296,13 +323,13 @@
 
 /* RIGHT — Upload */
 .r3-mission-upload {
-  padding: 22px 20px;
+  padding: 20px 22px;
   background: rgba(7,4,2,0.82);
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  overflow-y: auto;
+  gap: 12px;
+  overflow: hidden;
   z-index: 10;
 }
 
@@ -451,23 +478,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 14px;
   overflow-y: auto;
+  scrollbar-width: none;
 }
+.r3-result-body::-webkit-scrollbar { display: none; }
 
 .r3-result-card {
-  background: rgba(8,5,3,0.94);
+  background: rgba(8,5,3,0.95);
   border: 1px solid;
   border-radius: 16px;
-  padding: 28px 32px;
+  padding: 22px 28px;
   max-width: 520px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   backdrop-filter: blur(14px);
-  box-shadow: 0 0 60px rgba(0,0,0,0.7);
+  box-shadow: 0 0 60px rgba(0,0,0,0.75), inset 0 1px 0 rgba(212,160,23,0.08);
 }
 
 .r3-result-trophy {
@@ -498,7 +527,7 @@
 }
 .r3-result-preview-img {
   width: 100%;
-  height: 120px;
+  height: 104px;
   object-fit: cover;
   display: block;
   filter: brightness(0.85);

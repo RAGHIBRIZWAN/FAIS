@@ -223,25 +223,14 @@ export default function Round3Page({ gameState, onComplete }) {
 
                 <div className="r3-brief-divider" style={{ borderColor: `${door.color}44` }} />
 
-                <div className="r3-brief-items-title font-heading">REQUIRED ITEMS</div>
+                <div className="r3-brief-items-title font-heading">OBJECTIVES</div>
 
-                <div className="r3-brief-items">
-                  {door.requiredItems.map((item, i) => (
-                    <motion.div key={item.name} className="r3-brief-item"
-                      style={{ borderColor: `${door.color}33` }}
-                      initial={{ opacity: 0, x: -16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.07 + 0.2 }}>
-                      <span className="r3-brief-item-num font-heading" style={{ color: door.color }}>
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <span className="r3-brief-item-icon">{item.icon}</span>
-                      <span className="r3-brief-item-name">{item.name}</span>
-                      <span className="r3-brief-item-pts font-heading" style={{ color: door.color }}>
-                        20 pts
-                      </span>
-                    </motion.div>
-                  ))}
+                <div className="r3-brief-hidden-row">
+                  <span className="r3-brief-hidden-icon">🔒</span>
+                  <p className="r3-brief-hidden-text">
+                    Generate an image containing <strong style={{ color: door.color }}>5 survival items</strong> suited to a {door.label.toLowerCase()} environment.
+                    The required items are concealed — detection happens after submission.
+                  </p>
                 </div>
 
                 <div className="r3-brief-score-row">

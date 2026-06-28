@@ -20,10 +20,20 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
-  background: rgba(4, 3, 2, 0.92);
+  background: linear-gradient(180deg, rgba(8,6,3,0.96), rgba(4,3,2,0.92));
   border-bottom: 1px solid rgba(80, 55, 20, 0.5);
   backdrop-filter: blur(8px);
+  position: relative;
   z-index: 20;
+}
+
+.r1-topbar::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.55), transparent);
+  pointer-events: none;
 }
 
 .r1-topbar-left {
@@ -82,20 +92,71 @@
   pointer-events: none;
 }
 
+/* ── Instruction toggle (collapsed by default) ── */
+.r1-clue-toggle {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(6, 4, 2, 0.85);
+  border: 1px solid rgba(160, 120, 50, 0.45);
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+.r1-clue-toggle:hover {
+  border-color: var(--color-gold);
+  box-shadow: 0 4px 22px rgba(212,160,23,0.18);
+  transform: translateY(-1px);
+}
+.r1-clue-toggle-icon { font-size: 0.95rem; }
+.r1-clue-toggle-label {
+  font-family: var(--font-heading);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
 /* ── Instruction card ── */
 .r1-clue-card {
   position: absolute;
   top: 16px;
   left: 16px;
   max-width: 260px;
-  background: rgba(6, 4, 2, 0.82);
-  border: 1px solid rgba(100, 70, 20, 0.45);
-  border-radius: 6px;
+  background: rgba(6, 4, 2, 0.86);
+  border: 1px solid rgba(160, 120, 50, 0.45);
+  border-radius: 8px;
   padding: 14px 16px;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
   z-index: 10;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  box-shadow: 0 6px 26px rgba(0,0,0,0.65);
 }
+
+.r1-clue-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  font-size: 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.r1-clue-close:hover { color: #fff; background: rgba(192,57,43,0.6); border-color: #c0392b; }
 
 .r1-clue-text {
   font-family: var(--font-heading);
@@ -174,16 +235,18 @@
   background: linear-gradient(160deg, #14100a 0%, #0d0906 100%);
   border: 1px solid rgba(120, 85, 25, 0.5);
   border-radius: 12px;
-  padding: 28px 32px;
+  padding: 22px 28px;
   max-width: 760px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 88vh;
   overflow-y: auto;
+  scrollbar-width: none;
   box-shadow:
-    0 0 60px rgba(0,0,0,0.8),
-    0 0 30px rgba(180, 130, 30, 0.08);
+    0 0 60px rgba(0,0,0,0.85),
+    0 0 40px rgba(180, 130, 30, 0.1);
   position: relative;
 }
+.r1-lock-modal::-webkit-scrollbar { display: none; }
 
 .r1-lock-modal::before {
   content: '';
@@ -522,9 +585,19 @@
   align-items: center;
   justify-content: center;
   gap: 0;
-  background: rgba(4, 3, 2, 0.92);
+  background: linear-gradient(0deg, rgba(8,6,3,0.96), rgba(4,3,2,0.92));
   border-top: 1px solid rgba(80, 55, 20, 0.45);
+  position: relative;
   z-index: 20;
+}
+
+.r1-bottombar::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.45), transparent);
+  pointer-events: none;
 }
 
 .r1-bar-btn {

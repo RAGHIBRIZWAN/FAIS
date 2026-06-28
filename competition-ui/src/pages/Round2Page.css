@@ -22,10 +22,19 @@
   top: 0; left: 0; right: 0;
   z-index: 30;
   padding: 10px 20px;
-  background: rgba(4, 3, 2, 0.88);
+  background: linear-gradient(180deg, rgba(8,6,3,0.96), rgba(4,3,2,0.88));
   border-bottom: 1px solid rgba(80, 55, 20, 0.5);
   display: flex;
   align-items: center;
+}
+
+.r2-topbar::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,160,23,0.55), transparent);
+  pointer-events: none;
 }
 
 .r2-topbar--center {
@@ -149,27 +158,28 @@
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-top: 44px;
-  padding-bottom: 44px;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+  padding: 60px 24px 70px;
 }
 
 .r2-encounter-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/images/attacker.png');
-  background-size: cover;
-  background-position: center left;
-  background-repeat: no-repeat;
+  background:
+    radial-gradient(ellipse at 28% 55%, rgba(90,25,25,0.28) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 30%, rgba(40,30,12,0.4) 0%, transparent 60%),
+    linear-gradient(120deg, #0c0907 0%, #080604 55%, #0a0705 100%);
 }
 
 .r2-encounter-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.85) 100%),
-    radial-gradient(ellipse at 30% 50%, rgba(80,20,20,0.3) 0%, transparent 60%);
+    linear-gradient(90deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.82) 100%),
+    radial-gradient(ellipse at 30% 50%, rgba(80,20,20,0.22) 0%, transparent 60%);
 }
 
 /* Attacker figure positioned left */
@@ -218,14 +228,13 @@
 .r2-clue-card {
   position: relative;
   z-index: 20;
-  background: rgba(12, 9, 5, 0.88);
+  background: rgba(12, 9, 5, 0.9);
   border: 1px solid rgba(160,120,50,0.4);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 16px;
-  width: min(240px, 28vw);
-  margin-right: 20px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
+  width: min(300px, 32vw);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
 }
 
 .r2-clue-header {
@@ -281,18 +290,17 @@
 .r2-upload-card {
   position: relative;
   z-index: 20;
-  background: rgba(12, 9, 5, 0.88);
+  background: rgba(12, 9, 5, 0.9);
   border: 1px solid rgba(100,70,20,0.4);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 14px;
-  width: min(180px, 22vw);
-  margin-right: 16px;
+  width: min(300px, 32vw);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
 }
 
 .r2-upload-title {
@@ -412,12 +420,16 @@
   display: grid;
   grid-template-columns: 1fr 2px 1fr;
   gap: 0;
-  background: rgba(10,7,4,0.92);
-  border: 1px solid rgba(100,70,20,0.45);
-  border-radius: 8px;
+  background: rgba(10,7,4,0.94);
+  border: 1px solid rgba(120,70,20,0.5);
+  border-radius: 10px;
   overflow: hidden;
-  width: min(800px, 90vw);
-  box-shadow: 0 0 60px rgba(0,0,0,0.7), 0 0 30px rgba(180,130,30,0.05);
+  width: min(820px, 90vw);
+  max-height: calc(100vh - 90px);
+  box-shadow:
+    0 0 80px rgba(0,0,0,0.8),
+    0 0 40px rgba(180,130,30,0.08),
+    inset 0 1px 0 rgba(212,160,23,0.08);
 }
 
 .r2-verify-divider {
@@ -623,15 +635,16 @@
 .r2-battle-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/images/battle.png');
-  background-size: cover;
-  background-position: center;
+  background:
+    radial-gradient(ellipse at 50% 60%, rgba(60,18,18,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 20%, rgba(40,30,12,0.3) 0%, transparent 60%),
+    linear-gradient(180deg, #0a0705 0%, #060403 100%);
   animation: r2-battle-breathe 8s ease-in-out infinite alternate;
 }
 
 @keyframes r2-battle-breathe {
-  from { transform: scale(1.0); filter: brightness(0.7); }
-  to   { transform: scale(1.06); filter: brightness(0.9); }
+  from { filter: brightness(0.72); }
+  to   { filter: brightness(0.92); }
 }
 
 /* Full-screen red hit flash */

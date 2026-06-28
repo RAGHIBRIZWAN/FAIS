@@ -32,7 +32,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', position: 'relative', overflowX: 'hidden' }}>
+    <div style={{ height: '100vh', background: 'var(--color-bg)', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient particles */}
       <ParticleLayer />
 
