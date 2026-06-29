@@ -7,6 +7,9 @@ from PIL import Image
 import google.generativeai as genai
 from google.api_core.exceptions import ResourceExhausted
 
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 API_KEY = os.environ.get("GEMINI_API_KEY", "")
 MODEL   = "gemini-3.1-flash-lite"
 
@@ -281,7 +284,7 @@ def score_round3(image_path: str, terrain: str) -> float:
             # Cap at 100 (5 items × 20)
             score = min(score, 100)
 
-            return float(score)
+            return {"score": float(score), "details": result_dict}
 
         except ResourceExhausted:
             print("\n[Rate Limit] Waiting 15 seconds...\n")
@@ -301,5 +304,5 @@ def score_round3(image_path: str, terrain: str) -> float:
 if __name__ == "__main__":
     import sys
     terrain = sys.argv[1] if len(sys.argv) > 1 else "ocean"
-    score   = score_round3("submissions/round3.png", terrain)
-    print(f"\nFinal Verified Score: {score}")
+    result  = score_round3("submissions/round3.png", terrain)
+    print(f"\nFinal Verified Score: {result['score']}")

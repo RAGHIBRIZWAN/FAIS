@@ -7,6 +7,9 @@ from PIL import Image
 import google.generativeai as genai
 from google.api_core.exceptions import ResourceExhausted
 
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 API_KEY = os.environ.get("GEMINI_API_KEY", "")
 MODEL   = "gemini-3.1-flash-lite"
 
@@ -131,7 +134,7 @@ def score_key(image_path):
             if not data.get("left_taller_than_center",   False): score -= 10
             if not data.get("right_taller_than_center",  False): score -= 10
 
-            return max(0, round(score, 2))
+            return {"score": max(0, round(score, 2)), "details": data}
 
         except ResourceExhausted:
             print("\n[Rate Limit] Waiting 15 seconds...\n")
@@ -149,5 +152,5 @@ def score_key(image_path):
 
 
 if __name__ == "__main__":
-    score = score_key("submissions/key.png")
-    print(f"\nFinal Verified Score: {score}")
+    result = score_key("submissions/key.png")
+    print(f"\nFinal Verified Score: {result['score']}")

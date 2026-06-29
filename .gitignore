@@ -1,0 +1,8 @@
+.env
+.env.*
+__pycache__/
+*.pyc
+evaluators/__pycache__/
+competition-ui/node_modules/
+competition-ui/dist/
+*.local

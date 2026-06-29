@@ -6,18 +6,28 @@ const RIDDLE_SHORT = `Cold Soviet phantom.
 Banana curved shadow.
 What am I?`
 
-const RIDDLE_FULL = `Deep in an emerald jungle, where ancient vines interweave,
-A rusted iron treasure chest lies waiting to deceive.
-Stained with the crimson blood of battles long ago fought,
-It guards the mythic, heavy prize that the Argonauts sought.
+const RIDDLE_FULL = `I sleep beneath emerald roots,
+Inside a relic stained by forgotten wars.
 
-Within this chest, a phantom born of a cold Soviet dawn,
-Casts a banana-curved shadow where empires are drawn.
-Fueled by a cycle of gas and a fast-rotating bolt,
-It is Mikhail's rugged masterpiece, built to revolt.
+A specter stands watch,
+Born where winters outlived kings.
+It feeds on flame and force,
+Yet speaks only when commanded.
 
-It shares the texture of silence when chaos is stilled,
-The most radiant, gleaming crown that the harvest can yield.`
+Look not at its face,
+For shadows tell truer tales.
+One curve bends where no hand draws it,
+One star hides where no sky exists.
+
+Upon ancient stone,
+A number is carved but never spoken.
+Seek it, and count what the phantom refuses to say.
+
+And when torchlight kisses gold,
+The final piece reveals itself.
+
+Name the treasure sealed within.
+`
 
 export default function Round2Page({ gameState, onComplete }) {
   // phase: 'encounter' → 'verify' → 'battle'
@@ -31,16 +41,17 @@ export default function Round2Page({ gameState, onComplete }) {
   const [dragOver, setDragOver] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeProgress, setAnalyzeProgress] = useState(0)
-  const [weaponMatch, setWeaponMatch] = useState(null)
-  const [colorMatch, setColorMatch] = useState(null)
+  const [geminiScore, setGeminiScore] = useState(null)
   const [showFullRiddle, setShowFullRiddle] = useState(false)
   const [battleStarted, setBattleStarted] = useState(false)
   const [ammo, setAmmo] = useState(18)
   const [maxAmmo] = useState(90)
   const [fireEffect, setFireEffect] = useState(false)
   const [hitEffect, setHitEffect] = useState(false)
+  const [shootCount, setShootCount] = useState(0)
+  const [muzzlePos, setMuzzlePos] = useState({ x: 0, y: 0 })
   const fileRef = useRef()
-  const analyzeIntervalRef = useRef()
+  const barrelRef = useRef()
 
   /* ── Encounter timer ── */
   useEffect(() => {
@@ -84,25 +95,32 @@ export default function Round2Page({ gameState, onComplete }) {
     reader.readAsDataURL(file)
   }
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!imageFile) return
     setAnalyzing(true)
     setAnalyzeProgress(0)
-    // Simulate progress
-    let prog = 0
-    analyzeIntervalRef.current = setInterval(() => {
-      prog += Math.random() * 8
-      if (prog >= 92) {
-        prog = 92
-        clearInterval(analyzeIntervalRef.current)
-        const wm = Math.floor(88 + Math.random() * 10)
-        const cm = Math.floor(90 + Math.random() * 9)
-        setWeaponMatch(wm)
-        setColorMatch(cm)
-        setAnalyzing(false)
-      }
-      setAnalyzeProgress(Math.min(92, Math.floor(prog)))
-    }, 150)
+    setGeminiScore(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('image', imageFile)
+
+      const response = await fetch('http://localhost:8000/api/evaluate/round2', {
+        method: 'POST',
+        body: formData
+      })
+      const result = await response.json()
+      const total = result.score
+
+      setAnalyzeProgress(100)
+      setGeminiScore(total)
+      setAnalyzing(false)
+    } catch (e) {
+      console.error(e)
+      setAnalyzeProgress(100)
+      setGeminiScore(0)
+      setAnalyzing(false)
+    }
   }
 
   const handleProceedToBattle = () => {
@@ -112,9 +130,15 @@ export default function Round2Page({ gameState, onComplete }) {
 
   const handleShoot = () => {
     if (ammo <= 0) return
+    // Capture exact barrel-tip position so muzzle flash originates from it
+    if (barrelRef.current) {
+      const rect = barrelRef.current.getBoundingClientRect()
+      setMuzzlePos({ x: rect.left, y: rect.top + rect.height / 2 })
+    }
     setAmmo(a => a - 1)
     setFireEffect(true)
-    setTimeout(() => setFireEffect(false), 150)
+    setShootCount(c => c + 1)
+    setTimeout(() => setFireEffect(false), 220)
     const dmg = Math.floor(8 + Math.random() * 12)
     setEnemyHealth(h => {
       const next = Math.max(0, h - dmg)
@@ -124,12 +148,64 @@ export default function Round2Page({ gameState, onComplete }) {
   }
 
   const handleBattleEnd = () => {
-    const score = weaponMatch ? Math.floor((weaponMatch + colorMatch) / 2) : 60
+    const score = geminiScore !== null ? geminiScore : 0
     onComplete(score)
   }
 
   return (
     <div className="r2-root">
+
+      {/* ══════════════ EVALUATOR LOADING OVERLAY ══════════════ */}
+      <AnimatePresence>
+        {analyzing && (
+          <motion.div
+            className="r2-eval-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="r2-eval-card"
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            >
+              <motion.div
+                className="r2-eval-spinner"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
+              >
+                ⚙️
+              </motion.div>
+
+              <motion.h3
+                className="r2-eval-title font-heading"
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity }}
+              >
+                Gemini AI Evaluating…
+              </motion.h3>
+
+              <p className="r2-eval-sub">
+                Analysing your weapon image. Please wait — this may take a few seconds.
+              </p>
+
+              <div className="r2-eval-bar-track">
+                <motion.div
+                  className="r2-eval-bar-fill"
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              </div>
+
+              <p className="r2-eval-tip">Do not close or refresh the page.</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
 
         {/* ═══════════════════════════════════════
@@ -167,8 +243,8 @@ export default function Round2Page({ gameState, onComplete }) {
               animate={{ x: [0, -4, 4, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <img src="/images/attacker.png" alt="Attacker" className="r2-attacker-img"
-                onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }} />
+              <img src="/images/ghost.png" alt="Attacker" className="r2-attacker-img"
+                onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
               <div className="r2-attacker-fallback">
                 <motion.div
                   style={{ fontSize: 'clamp(6rem,15vw,12rem)' }}
@@ -182,77 +258,77 @@ export default function Round2Page({ gameState, onComplete }) {
 
             {/* ── Right column: clue + upload (kept together) ── */}
             <div className="r2-right-col">
-            {/* ── Clue card ── */}
-            <motion.div
-              className="r2-clue-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="r2-clue-header font-heading">CLUE</div>
-              <div className="r2-clue-body">
-                {RIDDLE_SHORT.split('\n').map((line, i) => (
-                  <p key={i} className="r2-clue-line">{line}</p>
-                ))}
-              </div>
-              <button className="r2-riddle-toggle" onClick={() => setShowFullRiddle(v => !v)}>
-                {showFullRiddle ? '▲ Hide full riddle' : '▼ Read full riddle'}
-              </button>
-              <AnimatePresence>
-                {showFullRiddle && (
-                  <motion.div
-                    className="r2-full-riddle"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {RIDDLE_FULL.split('\n').map((line, i) => (
-                      <p key={i} style={{ marginBottom: line === '' ? 8 : 2, fontStyle: 'italic', fontSize: '0.68rem', color: '#9c8060' }}>{line || '\u00A0'}</p>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div className="r2-clue-footer font-heading">Generate the weapon to defeat the attacker</div>
-            </motion.div>
-
-            {/* ── Upload panel ── */}
-            <motion.div
-              className="r2-upload-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <div className="r2-upload-title font-heading">UPLOAD WEAPON IMAGE</div>
-              {imagePreview ? (
-                <div className="r2-upload-preview-wrap">
-                  <img src={imagePreview} alt="weapon" className="r2-upload-preview-img" />
-                  <button className="r2-remove-img" onClick={() => { setImageFile(null); setImagePreview(null) }}>✕</button>
-                </div>
-              ) : (
-                <div
-                  className={`r2-dropzone ${dragOver ? 'over' : ''}`}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={e => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files[0]) }}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
-                    onChange={e => handleFileSelect(e.target.files[0])} />
-                  <div className="r2-upload-icon">⬆</div>
-                  <div className="r2-upload-label">Upload Image</div>
-                </div>
-              )}
-              <motion.button
-                className="r2-proceed-btn"
-                disabled={!imageFile}
-                onClick={() => setPhase('verify')}
-                whileHover={{ scale: imageFile ? 1.03 : 1 }}
-                whileTap={{ scale: imageFile ? 0.97 : 1 }}
+              {/* ── Clue card ── */}
+              <motion.div
+                className="r2-clue-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
               >
-                ⚔️ Analyze Weapon
-              </motion.button>
-            </motion.div>
+                <div className="r2-clue-header font-heading">CLUE</div>
+                <div className="r2-clue-body">
+                  {RIDDLE_SHORT.split('\n').map((line, i) => (
+                    <p key={i} className="r2-clue-line">{line}</p>
+                  ))}
+                </div>
+                <button className="r2-riddle-toggle" onClick={() => setShowFullRiddle(v => !v)}>
+                  {showFullRiddle ? '▲ Hide full riddle' : '▼ Read full riddle'}
+                </button>
+                <AnimatePresence>
+                  {showFullRiddle && (
+                    <motion.div
+                      className="r2-full-riddle"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {RIDDLE_FULL.split('\n').map((line, i) => (
+                        <p key={i} style={{ marginBottom: line === '' ? 8 : 2, fontStyle: 'italic', fontSize: '0.68rem', color: '#9c8060' }}>{line || '\u00A0'}</p>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <div className="r2-clue-footer font-heading">Generate the weapon to defeat the attacker</div>
+              </motion.div>
+
+              {/* ── Upload panel ── */}
+              <motion.div
+                className="r2-upload-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <div className="r2-upload-title font-heading">UPLOAD WEAPON IMAGE</div>
+                {imagePreview ? (
+                  <div className="r2-upload-preview-wrap">
+                    <img src={imagePreview} alt="weapon" className="r2-upload-preview-img" />
+                    <button className="r2-remove-img" onClick={() => { setImageFile(null); setImagePreview(null) }}>✕</button>
+                  </div>
+                ) : (
+                  <div
+                    className={`r2-dropzone ${dragOver ? 'over' : ''}`}
+                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={e => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files[0]) }}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+                      onChange={e => handleFileSelect(e.target.files[0])} />
+                    <div className="r2-upload-icon">⬆</div>
+                    <div className="r2-upload-label">Upload Image</div>
+                  </div>
+                )}
+                <motion.button
+                  className="r2-proceed-btn"
+                  disabled={!imageFile}
+                  onClick={() => setPhase('verify')}
+                  whileHover={{ scale: imageFile ? 1.03 : 1 }}
+                  whileTap={{ scale: imageFile ? 0.97 : 1 }}
+                >
+                  ⚔️ Analyze Weapon
+                </motion.button>
+              </motion.div>
             </div>
 
             {/* ── Player health (bottom) ── */}
@@ -303,7 +379,7 @@ export default function Round2Page({ gameState, onComplete }) {
                 </div>
 
                 {/* Analyze button / progress */}
-                {!weaponMatch && (
+                {geminiScore === null && (
                   <motion.button
                     className="r2-analyze-btn"
                     onClick={handleAnalyze}
@@ -325,22 +401,36 @@ export default function Round2Page({ gameState, onComplete }) {
               <div className="r2-results-section">
                 <div className="r2-section-title font-heading">ANALYSIS RESULTS</div>
 
-                {(analyzing || weaponMatch) ? (
+                {(analyzing || geminiScore !== null) ? (
                   <>
                     <div className="r2-result-rows">
-                      {[
-                        ['Weapon Match', weaponMatch],
-                        ['Color Match', colorMatch],
-                      ].map(([label, val]) => (
-                        <div key={label} className="r2-result-row">
-                          <span className="r2-result-label">{label}</span>
-                          <span className="r2-result-val" style={{
-                            color: val >= 80 ? '#2ecc71' : val >= 60 ? '#d4a017' : '#e85a1e'
-                          }}>
-                            {val !== null ? `${val}%` : '—'}
-                          </span>
-                        </div>
-                      ))}
+                      {analyzing ? (
+                        <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1, repeat: Infinity }}
+                          style={{ color: 'var(--color-text-dim)', fontSize: '0.8rem' }}>
+                          Analyzing...
+                        </motion.span>
+                      ) : (
+                        <>
+                          <div className="r2-result-row">
+                            <span className="r2-result-label">Gemini Score</span>
+                            <span className="r2-result-val" style={{
+                              color: geminiScore >= 80 ? '#2ecc71' : '#e85a1e',
+                              fontSize: '1.4rem',
+                              fontWeight: 700
+                            }}>
+                              {geminiScore} / 100
+                            </span>
+                          </div>
+                          <div className="r2-result-row">
+                            <span className="r2-result-label">Status</span>
+                            <span className="r2-result-val" style={{
+                              color: geminiScore >= 80 ? '#2ecc71' : '#e85a1e'
+                            }}>
+                              {geminiScore >= 80 ? '✅ PASS' : '❌ FAIL'}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Progress bar */}
@@ -350,21 +440,36 @@ export default function Round2Page({ gameState, onComplete }) {
                           <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1, repeat: Infinity }}>
                             Analyzing...
                           </motion.span>
-                        ) : 'Complete'}
+                        ) : (
+                          <span style={{ color: geminiScore >= 80 ? '#2ecc71' : 'var(--color-ember)' }}>
+                            {geminiScore >= 80 ? 'WEAPON ACCEPTED!' : 'WEAPON REJECTED'}
+                          </span>
+                        )}
                       </div>
                       <div className="r2-progress-track">
                         <motion.div
                           className="r2-progress-fill"
                           animate={{ width: `${analyzeProgress}%` }}
                           transition={{ duration: 0.3 }}
+                          style={{
+                            background: geminiScore !== null
+                              ? (geminiScore >= 80 ? 'linear-gradient(90deg,#1a5c30,#2ecc71)' : 'linear-gradient(90deg,#8c1a1a,#e74c3c)')
+                              : undefined
+                          }}
                         />
                       </div>
                       <div className="r2-progress-pct font-heading">{analyzeProgress}%</div>
                     </div>
 
-                    <p className="r2-tip">Tip: Make sure the weapon is clearly visible.</p>
+                    <p className="r2-tip">
+                      {analyzing
+                        ? 'Tip: Make sure the weapon is clearly visible.'
+                        : geminiScore >= 80
+                          ? 'Weapon verified. Proceed to battle!'
+                          : 'Score must be ≥ 80 to proceed. Try a clearer image.'}
+                    </p>
 
-                    {weaponMatch && (
+                    {geminiScore !== null && (
                       <motion.button
                         className="r2-battle-btn"
                         onClick={handleProceedToBattle}
@@ -401,7 +506,7 @@ export default function Round2Page({ gameState, onComplete }) {
             onClick={handleShoot}
             style={{ cursor: 'crosshair' }}
           >
-            {/* Battle BG */}
+            {/* Battle BG — attacker fills full screen */}
             <div className="r2-battle-bg" />
 
             {/* Red hit flash */}
@@ -417,16 +522,28 @@ export default function Round2Page({ gameState, onComplete }) {
               )}
             </AnimatePresence>
 
-            {/* Muzzle flash */}
+            {/* ── Realistic golden muzzle flash — anchored to actual barrel tip position ── */}
             <AnimatePresence>
               {fireEffect && (
                 <motion.div
-                  key="fire"
-                  className="r2-fire-flash"
-                  initial={{ opacity: 0.8 }}
-                  animate={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                />
+                  key={`muzzle-${shootCount}`}
+                  className="r2-muzzle-root"
+                  style={{ left: muzzlePos.x, top: muzzlePos.y }}
+                  initial={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 0, scale: 1.3 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                >
+                  {/* Outer golden bloom */}
+                  <div className="r2-muzzle-bloom" />
+                  {/* Radial light rays */}
+                  <div className="r2-muzzle-rays" />
+                  {/* Inner hot core */}
+                  <div className="r2-muzzle-core" />
+                  {/* White-hot center */}
+                  <div className="r2-muzzle-hot" />
+                  {/* Screen-wide light wash */}
+                  <div className="r2-muzzle-wash" />
+                </motion.div>
               )}
             </AnimatePresence>
 
@@ -455,30 +572,43 @@ export default function Round2Page({ gameState, onComplete }) {
               </div>
             </div>
 
-            {/* Crosshair */}
+            {/* Crosshair — follows gun barrel */}
             <div className="r2-crosshair">
               <div className="r2-crosshair-h" />
               <div className="r2-crosshair-v" />
               <div className="r2-crosshair-dot" />
             </div>
 
-            {/* Attacker in center */}
+            {/* Attacker — full screen */}
             <motion.div
               className="r2-battle-attacker"
               animate={{
-                scale: [1, 1.04, 1],
+                scale: [1, 1.015, 1],
                 filter: [
-                  'drop-shadow(0 0 10px rgba(231,76,60,0.4))',
-                  'drop-shadow(0 0 30px rgba(231,76,60,0.8))',
-                  'drop-shadow(0 0 10px rgba(231,76,60,0.4))',
+                  'drop-shadow(0 0 20px rgba(231,76,60,0.5)) brightness(0.88)',
+                  'drop-shadow(0 0 55px rgba(231,76,60,1.0)) brightness(1.05)',
+                  'drop-shadow(0 0 20px rgba(231,76,60,0.5)) brightness(0.88)',
                 ]
               }}
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={{ duration: 2.5, repeat: Infinity }}
             >
-              <img src="/images/attacker.png" alt="enemy" className="r2-battle-enemy-img"
-                onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='block' }} />
-              <div style={{ display: 'none', fontSize: '8rem', textAlign: 'center' }}>🧟</div>
+              <img src="/images/ghost.png" alt="enemy" className="r2-battle-enemy-img"
+                onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block' }} />
+              <div style={{ display: 'none', fontSize: '12rem', textAlign: 'center', lineHeight: '100vh' }}>🧟</div>
             </motion.div>
+
+            {/* Gun silhouette — points toward attacker */}
+            <div className="r2-gun-wrap">
+              <motion.div
+                className="r2-gun-barrel"
+                animate={fireEffect ? { y: [0, 12, 0], x: [0, 3, 0] } : {}}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
+                <div className="r2-gun-body" />
+                {/* ref here — this is the element whose left-center is the muzzle opening */}
+                <div className="r2-gun-barrel-tip" ref={barrelRef} />
+              </motion.div>
+            </div>
 
             {/* Weapon (bottom right) */}
             <motion.div

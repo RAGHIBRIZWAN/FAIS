@@ -11,7 +11,6 @@ export default function Round1Page({ gameState, onComplete }) {
   const [imagePreview, setImagePreview] = useState(null)
   const [dragOver, setDragOver] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
-  const [scores, setScores] = useState(null)
   const [totalScore, setTotalScore] = useState(null)
   const [pulseWindow, setPulseWindow] = useState(false)
   const fileRef = useRef()
@@ -34,24 +33,87 @@ export default function Round1Page({ gameState, onComplete }) {
   }
 
   /* ── Submit / analyze ── */
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!imageFile) return
     setAnalyzing(true)
-    setTimeout(() => {
-      const shape  = Math.floor(80 + Math.random() * 20)
-      const teeth  = Math.floor(75 + Math.random() * 25)
-      const color  = Math.floor(78 + Math.random() * 22)
-      const edge   = Math.floor(82 + Math.random() * 18)
-      const total  = Math.floor((shape + teeth + color + edge) / 4)
-      setScores({ shape, teeth, color, edge })
-      setTotalScore(total)
+    setTotalScore(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('image', imageFile)
+      
+      const response = await fetch('http://localhost:8000/api/evaluate/round1', {
+        method: 'POST',
+        body: formData
+      })
+      const result = await response.json()
+      setTotalScore(result.score)
       setAnalyzing(false)
       setPhase('result')
-    }, 3500)
+    } catch (e) {
+      console.error(e)
+      setTotalScore(0)
+      setAnalyzing(false)
+      setPhase('result')
+    }
   }
 
   return (
     <div className="r1-root">
+
+      {/* ══════════════ EVALUATOR LOADING OVERLAY ══════════════ */}
+      <AnimatePresence>
+        {analyzing && (
+          <motion.div
+            className="r1-eval-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="r1-eval-card"
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            >
+              {/* Spinner */}
+              <motion.div
+                className="r1-eval-spinner"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+              >
+                ⚙️
+              </motion.div>
+
+              <motion.h3
+                className="r1-eval-title font-heading"
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity }}
+              >
+                Gemini AI Evaluating…
+              </motion.h3>
+
+              <p className="r1-eval-sub">
+                Analysing your key image. Please wait — this may take a few seconds.
+              </p>
+
+              {/* Indeterminate animated bar */}
+              <div className="r1-eval-bar-track">
+                <motion.div
+                  className="r1-eval-bar-fill"
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              </div>
+
+              <p className="r1-eval-tip">Do not close or refresh the page.</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* ══════════════ TOP BAR ══════════════ */}
       <div className="r1-topbar">
@@ -167,29 +229,23 @@ export default function Round1Page({ gameState, onComplete }) {
                   </div>
                 )}
 
-                {/* ─ SUBMIT VIEW ─ */}
-                {phase === 'submit' && (
-                  <div className="r1-submit-view">
-                    <div className="r1-modal-header">
-                      <span className="font-heading r1-modal-title">🗝️ Submit the Key</span>
-                      <p className="r1-modal-hint">Generate a key image using an AI tool and upload it below</p>
-                    </div>
-
-                    <div className="r1-submit-body r1-submit-body--single">
-
-                      {/* Right — upload */}
-                      <div className="r1-upload-area">
+                {/* ─ SUBMIT & RESULT VIEW (Verify Panel) ─ */}
+                {(phase === 'submit' || phase === 'result') && (
+                  <div className="r1-verify-panel">
+                    {/* Left — YOUR KEY */}
+                    <div className="r1-weapon-section">
+                      <div className="r1-section-title font-heading">YOUR KEY</div>
+                      <div className="r1-weapon-img-box">
                         {imagePreview ? (
-                          <motion.div className="r1-preview-wrap"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                          >
-                            <img src={imagePreview} alt="Your key" className="r1-preview-img" />
-                            <button
-                              className="r1-remove-btn"
-                              onClick={() => { setImageFile(null); setImagePreview(null) }}
-                            >✕ Remove</button>
-                          </motion.div>
+                          <>
+                            <img src={imagePreview} alt="Your key" className="r1-weapon-img" />
+                            {!analyzing && phase !== 'result' && (
+                              <button
+                                className="r1-remove-btn"
+                                onClick={() => { setImageFile(null); setImagePreview(null) }}
+                              >✕</button>
+                            )}
+                          </>
                         ) : (
                           <div
                             className={`r1-dropzone ${dragOver ? 'r1-dropzone--over' : ''}`}
@@ -200,128 +256,111 @@ export default function Round1Page({ gameState, onComplete }) {
                           >
                             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
                               onChange={e => handleFileSelect(e.target.files[0])} />
-                            <div className="r1-dropzone-icon">🗝️</div>
-                            <p className="r1-dropzone-title">DROP YOUR KEY IMAGE</p>
-                            <p className="r1-dropzone-sub">PNG · JPG · WEBP — or click to browse</p>
+                            <div className="r1-upload-icon">⬆</div>
+                            <p className="r1-upload-label">Upload Image</p>
                           </div>
                         )}
+                        {analyzing && <div className="r1-weapon-scan-line" />}
+                      </div>
 
+                      {/* Analyze button */}
+                      {totalScore === null && (
                         <motion.button
-                          className="btn btn-primary r1-modal-btn"
+                          className="r1-analyze-btn"
                           disabled={!imageFile || analyzing}
                           onClick={handleSubmit}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.97 }}
+                          whileHover={{ scale: (imageFile && !analyzing) ? 1.03 : 1 }}
+                          whileTap={{ scale: (imageFile && !analyzing) ? 0.97 : 1 }}
                           style={{ marginTop: 14 }}
                         >
                           {analyzing ? (
-                            <>
-                              <motion.span animate={{ rotate: 360 }}
-                                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}>⚙️</motion.span>
-                              &nbsp;Analyzing Key…
-                            </>
-                          ) : '🔓 Unlock — Submit Key'}
+                            <><motion.span animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}>⚙️</motion.span> Scanning...</>
+                          ) : '🔍 Analyze Key'}
                         </motion.button>
+                      )}
+                      
+                      {!imageFile && phase === 'submit' && (
+                         <button style={{
+                           background: 'none', border: 'none', color: 'var(--color-text-muted)',
+                           fontFamily: 'var(--font-heading)', fontSize: '0.65rem', letterSpacing: '0.1em',
+                           cursor: 'pointer', padding: '6px 0', transition: 'color 0.2s', alignSelf: 'flex-start'
+                         }} onClick={() => setPhase('lock')}>← Back</button>
+                      )}
+                    </div>
 
-                        {analyzing && (
-                          <div style={{ marginTop: 10 }}>
-                            <div className="r1-prog-bar">
-                              <motion.div className="r1-prog-fill"
-                                animate={{ width: ['0%', '100%'] }}
-                                transition={{ duration: 3.5, ease: 'easeInOut' }}
-                              />
+                    {/* Divider */}
+                    <div className="r1-verify-divider" />
+
+                    {/* Right — ANALYSIS RESULTS */}
+                    <div className="r1-results-section">
+                      <div className="r1-section-title font-heading">ANALYSIS RESULTS</div>
+
+                      {totalScore !== null ? (
+                        <>
+                          {/* Raw score display */}
+                          <div className="r1-result-rows">
+                            <div className="r1-result-row">
+                              <span className="r1-result-label">Gemini Score</span>
+                              <span className="r1-result-val" style={{
+                                color: totalScore >= 80 ? '#2ecc71' : '#e85a1e',
+                                fontSize: '1.4rem',
+                                fontWeight: 700
+                              }}>
+                                {totalScore} / 100
+                              </span>
                             </div>
-                            <p style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: 5, textAlign: 'center' }}>
-                              Running edge detection…
-                            </p>
+                            <div className="r1-result-row">
+                              <span className="r1-result-label">Status</span>
+                              <span className="r1-result-val" style={{
+                                color: totalScore >= 80 ? '#2ecc71' : '#e85a1e'
+                              }}>
+                                {totalScore >= 80 ? '✅ PASS' : '❌ FAIL'}
+                              </span>
+                            </div>
                           </div>
-                        )}
 
-                        <button className="r1-back-btn" onClick={() => setPhase('lock')}>← Back</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ─ RESULT VIEW ─ */}
-                {phase === 'result' && scores && (
-                  <div className="r1-result-view">
-                    <div className="r1-modal-header">
-                      <motion.span
-                        style={{ fontSize: '2.5rem' }}
-                        animate={{ scale: [1, 1.15, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        {totalScore >= 80 ? '🏆' : totalScore >= 60 ? '✅' : '❌'}
-                      </motion.span>
-                      <span className="font-heading r1-modal-title" style={{
-                        color: totalScore >= 80 ? '#2ecc71' : totalScore >= 60 ? 'var(--color-gold)' : 'var(--color-ember)'
-                      }}>
-                        {totalScore >= 80 ? 'KEY ACCEPTED!' : totalScore >= 60 ? 'PARTIAL MATCH' : 'KEY REJECTED'}
-                      </span>
-                      <p className="r1-modal-hint">
-                        {totalScore >= 80
-                          ? 'The lock clicks open. Your key was perfect.'
-                          : totalScore >= 60
-                          ? 'The lock strains but opens partially.'
-                          : 'The key does not fit. The lock holds firm.'}
-                      </p>
-                    </div>
-
-                    <div className="r1-result-grid">
-                      {[
-                        ['🔷 Key Shape',    scores.shape],
-                        ['⚙️ Tooth Count',  scores.teeth],
-                        ['🎨 Color Match',  scores.color],
-                        ['✂️ Edge Clarity', scores.edge],
-                      ].map(([label, val]) => (
-                        <div key={label} className="r1-result-row">
-                          <span className="r1-result-label">{label}</span>
-                          <div className="r1-result-bar-wrap">
-                            <div className="r1-prog-bar">
+                          {/* Progress bar */}
+                          <div className="r1-progress-section">
+                            <div className="r1-progress-label">
+                              <span style={{ color: totalScore >= 80 ? '#2ecc71' : 'var(--color-ember)' }}>
+                                {totalScore >= 80 ? 'KEY ACCEPTED!' : 'KEY REJECTED'}
+                              </span>
+                            </div>
+                            <div className="r1-progress-track">
                               <motion.div
-                                className="r1-prog-fill"
-                                style={{
-                                  background: val >= 80
-                                    ? 'linear-gradient(90deg,#1a8c4a,#2ecc71)'
-                                    : val >= 60
-                                    ? 'linear-gradient(90deg,#7a4a0a,#d4a017)'
-                                    : 'linear-gradient(90deg,#6e1010,#e85a1e)'
-                                }}
+                                className="r1-progress-fill"
                                 initial={{ width: 0 }}
-                                animate={{ width: `${val}%` }}
-                                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                                animate={{ width: `${totalScore || 0}%` }}
+                                transition={{ duration: 0.5 }}
+                                style={{ background: totalScore >= 80 ? 'linear-gradient(90deg, #1a5c30, #2ecc71)' : 'linear-gradient(90deg, #8c1a1a, #e74c3c)' }}
                               />
                             </div>
+                            <div className="r1-progress-pct font-heading">{totalScore}%</div>
                           </div>
-                          <span className="r1-result-pct" style={{
-                            color: val >= 80 ? '#2ecc71' : val >= 60 ? 'var(--color-gold)' : 'var(--color-ember)'
-                          }}>{val}%</span>
+
+                          <p className="r1-tip">
+                            {totalScore >= 80
+                              ? 'The lock clicks open. Your key was perfect.'
+                              : 'The key does not fit. Score must be ≥ 80 to pass.'}
+                          </p>
+
+                          <motion.button
+                            className="r1-battle-btn"
+                            onClick={() => onComplete(totalScore)}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                          >
+                            ⚔️ Proceed to Round 2
+                          </motion.button>
+                        </>
+                      ) : (
+                        <div className="r1-results-empty">
+                          <p>Upload a key image and click "Analyze Key" to verify its structure.</p>
                         </div>
-                      ))}
+                      )}
                     </div>
-
-                    <div className="r1-total-score-row">
-                      <span className="r1-total-label font-heading">TOTAL SCORE</span>
-                      <motion.span
-                        className="r1-total-val"
-                        style={{ color: totalScore >= 80 ? '#2ecc71' : totalScore >= 60 ? 'var(--color-gold)' : 'var(--color-ember)' }}
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: 'spring', stiffness: 200, delay: 0.4 }}
-                      >
-                        {totalScore}/100
-                      </motion.span>
-                    </div>
-
-                    <motion.button
-                      className="btn btn-primary r1-modal-btn"
-                      onClick={() => onComplete(totalScore)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      ⚔️ Proceed to Round 2 — Armory Assault
-                    </motion.button>
                   </div>
                 )}
 

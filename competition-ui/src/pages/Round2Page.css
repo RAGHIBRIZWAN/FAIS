@@ -667,35 +667,116 @@
   z-index: 40;
 }
 
-/* Muzzle flash */
-.r2-fire-flash {
-  position: absolute;
-  inset: 0;
-  background: rgba(255,200,50,0.15);
+/* ══ MUZZLE FLASH ══ */
+/* Uses position:fixed + left/top injected from JS (getBoundingClientRect of barrel tip) */
+.r2-muzzle-root {
+  position: fixed;
+  z-index: 9999;
   pointer-events: none;
-  z-index: 40;
+  width: 0;
+  height: 0;
+  /* centered on the muzzle point via child transforms */
 }
 
-/* Enemy in battle scene */
+/* Outer golden-orange bloom */
+.r2-muzzle-bloom {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 230, 80, 0.98) 0%,
+    rgba(255, 160, 20, 0.85) 20%,
+    rgba(255, 100, 0,  0.60) 42%,
+    rgba(220, 60,  0,  0.28) 62%,
+    transparent 78%
+  );
+  filter: blur(14px);
+}
+
+/* Radial light-ray starburst */
+.r2-muzzle-rays {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,   rgba(255,220,60,0.75) 4deg,   transparent 10deg,
+    transparent 30deg,  rgba(255,210,50,0.55) 35deg,  transparent 40deg,
+    transparent 62deg,  rgba(255,230,80,0.65) 67deg,  transparent 72deg,
+    transparent 92deg,  rgba(255,200,40,0.60) 96deg,  transparent 101deg,
+    transparent 122deg, rgba(255,220,70,0.70) 127deg, transparent 132deg,
+    transparent 152deg, rgba(255,210,60,0.55) 157deg, transparent 162deg,
+    transparent 182deg, rgba(255,230,80,0.65) 187deg, transparent 192deg,
+    transparent 212deg, rgba(255,200,50,0.55) 217deg, transparent 222deg,
+    transparent 242deg, rgba(255,220,70,0.65) 247deg, transparent 252deg,
+    transparent 272deg, rgba(255,210,60,0.60) 277deg, transparent 282deg,
+    transparent 302deg, rgba(255,230,80,0.70) 307deg, transparent 312deg,
+    transparent 332deg, rgba(255,200,50,0.55) 337deg, transparent 342deg,
+    transparent 358deg, rgba(255,220,60,0.75) 360deg
+  );
+  mask-image: radial-gradient(ellipse, black 0%, transparent 65%);
+  -webkit-mask-image: radial-gradient(ellipse, black 0%, transparent 65%);
+  filter: blur(2px);
+  opacity: 0.9;
+}
+
+/* Hot inner core — white-gold */
+.r2-muzzle-core {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 255, 240, 1.0) 0%,
+    rgba(255, 245, 120, 0.95) 25%,
+    rgba(255, 185, 35, 0.78) 55%,
+    transparent 80%
+  );
+  filter: blur(3px);
+}
+
+/* White-hot center point */
+.r2-muzzle-hot {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  box-shadow:
+    0 0 10px 7px rgba(255,255,255,0.95),
+    0 0 28px 14px rgba(255,245,100,0.75),
+    0 0 60px 24px rgba(255,160,20,0.4);
+}
+
+/* Subtle full-screen golden wash when firing */
+.r2-muzzle-wash {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 185, 30, 0.08);
+  pointer-events: none;
+}
+
+/* Enemy in battle scene — FULL SCREEN */
 .r2-battle-attacker {
   position: absolute;
-  top: 44px;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 20%;
-  width: clamp(200px, 30vw, 400px);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  inset: 0;
   z-index: 15;
+  pointer-events: none;
 }
 
 .r2-battle-enemy-img {
-  height: 100%;
   width: 100%;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   object-position: center top;
-  filter: drop-shadow(0 0 20px rgba(231,76,60,0.5));
+  filter: drop-shadow(0 0 30px rgba(231,76,60,0.6));
 }
 
 /* Enemy health HUD (top-right) */
@@ -817,4 +898,175 @@
   font-size: 1.3rem;
   letter-spacing: 0.15em;
   color: var(--color-gold);
+}
+
+/* ══════════════════════
+   GUN SILHOUETTE HUD
+══════════════════════ */
+
+.r2-gun-wrap {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 560px;
+  height: 310px;
+  z-index: 22;
+  pointer-events: none;
+  /* Tilt the barrel up-left to aim at the crosshair / attacker */
+  transform: rotate(-18deg);
+  transform-origin: 100% 100%;
+  /* overflow visible so barrel tip is always on screen */
+  overflow: visible;
+}
+
+.r2-gun-barrel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Main gun receiver / body */
+.r2-gun-body {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 400px;
+  height: 130px;
+  background: linear-gradient(
+    160deg,
+    #2a2a2a 0%,
+    #1c1c1c 35%,
+    #141414 70%,
+    #0d0d0d 100%
+  );
+  border-radius: 10px 10px 5px 5px;
+  box-shadow:
+    0 -6px 24px rgba(0,0,0,0.9),
+    inset 0 2px 6px rgba(255,255,255,0.07),
+    inset 0 -3px 8px rgba(0,0,0,0.7);
+}
+/* Pistol grip bump at the back */
+.r2-gun-body::after {
+  content: '';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  width: 60px;
+  height: 90px;
+  background: linear-gradient(180deg, #1c1c1c, #0d0d0d);
+  border-radius: 4px 4px 10px 10px;
+  box-shadow: inset 0 -2px 6px rgba(0,0,0,0.8);
+}
+
+/* Barrel — extends left from the body, pointing toward crosshair */
+.r2-gun-barrel-tip {
+  position: absolute;
+  /* positioned so its LEFT edge = the muzzle opening */
+  bottom: 90px;
+  right: 280px;   /* right edge starts at body */
+  width: 280px;   /* barrel length — left end is the muzzle */
+  height: 22px;
+  background: linear-gradient(
+    180deg,
+    #303030 0%,
+    #1f1f1f 45%,
+    #111 100%
+  );
+  border-radius: 3px 14px 14px 3px;
+  box-shadow:
+    0 -4px 12px rgba(0,0,0,0.8),
+    inset 0 1px 3px rgba(255,255,255,0.06);
+}
+/* Muzzle ring at left (open) end of barrel */
+.r2-gun-barrel-tip::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: -7px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #222 30%, #0d0d0d 100%);
+  box-shadow:
+    0 0 10px rgba(0,0,0,0.9),
+    inset 0 0 8px rgba(0,0,0,0.95),
+    inset 0 2px 3px rgba(255,255,255,0.04);
+}
+
+/* ══════════════ GEMINI EVALUATOR OVERLAY ══════════════ */
+.r2-eval-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(4, 2, 2, 0.90);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.r2-eval-card {
+  background: linear-gradient(160deg, #150a0a 0%, #0d0606 100%);
+  border: 1px solid rgba(192,57,43,0.35);
+  border-radius: 16px;
+  padding: 40px 48px;
+  max-width: 460px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  box-shadow:
+    0 0 80px rgba(0,0,0,0.9),
+    0 0 40px rgba(192,57,43,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  text-align: center;
+}
+
+.r2-eval-spinner {
+  font-size: 3.2rem;
+  line-height: 1;
+  display: inline-block;
+  filter: drop-shadow(0 0 18px rgba(231,76,60,0.6));
+}
+
+.r2-eval-title {
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+  color: #e85a1e;
+  margin: 0;
+}
+
+.r2-eval-sub {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  line-height: 1.6;
+  max-width: 320px;
+  margin: 0;
+}
+
+.r2-eval-bar-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+}
+
+.r2-eval-bar-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 45%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, #e85a1e, transparent);
+}
+
+.r2-eval-tip {
+  font-size: 0.63rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
 }

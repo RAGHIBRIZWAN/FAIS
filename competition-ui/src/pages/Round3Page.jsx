@@ -13,11 +13,16 @@ const DOORS = [
     colorDim: 'rgba(26,159,212,0.14)',
     image: '/images/ocean.png',
     requiredItems: [
-      { icon: '🛟', name: 'Life Jacket' },
-      { icon: '🚤', name: 'Inflatable Raft' },
-      { icon: '💧', name: 'Desalination Kit' },
-      { icon: '📡', name: 'Emergency Beacon' },
-      { icon: '🩹', name: 'First Aid Kit' },
+      { icon: '🛥️', name: 'boat', key: 'boat' },
+      { icon: '🛶', name: 'paddle', key: 'paddle' },
+      { icon: '🛟', name: 'life jacket', key: 'life_jacket' },
+      { icon: '⚓', name: 'anchor', key: 'anchor' },
+      { icon: '🎣', name: 'fishing rod', key: 'fishing_rod' },
+      { icon: '🤿', name: 'snorkel', key: 'snorkel' },
+      { icon: '🗼', name: 'lighthouse', key: 'lighthouse' },
+      { icon: '🔫', name: 'flare gun', key: 'flare_gun' },
+      { icon: '🪢', name: 'rope', key: 'rope' },
+      { icon: '🧭', name: 'compass', key: 'compass' },
     ],
   },
   {
@@ -29,11 +34,16 @@ const DOORS = [
     colorDim: 'rgba(160,184,204,0.14)',
     image: '/images/mountain.png',
     requiredItems: [
-      { icon: '🪢', name: 'Climbing Rope' },
-      { icon: '⛏️', name: 'Ice Axe' },
-      { icon: '⛺', name: 'Emergency Tent' },
-      { icon: '🔦', name: 'Headlamp' },
-      { icon: '🩹', name: 'First Aid Kit' },
+      { icon: '🪢', name: 'rope', key: 'rope' },
+      { icon: '⛏️', name: 'ice axe', key: 'ice_axe' },
+      { icon: '🎒', name: 'backpack', key: 'backpack' },
+      { icon: '🪖', name: 'helmet', key: 'helmet' },
+      { icon: '🔗', name: 'carabiner', key: 'carabiner' },
+      { icon: '⛺', name: 'tent', key: 'tent' },
+      { icon: '🥾', name: 'boots', key: 'boots' },
+      { icon: '🗺️', name: 'map', key: 'map' },
+      { icon: '🔦', name: 'flashlight', key: 'flashlight' },
+      { icon: '🩹', name: 'first aid kit', key: 'first_aid_kit' },
     ],
   },
   {
@@ -45,26 +55,31 @@ const DOORS = [
     colorDim: 'rgba(212,144,42,0.14)',
     image: '/images/desert.png',
     requiredItems: [
-      { icon: '💧', name: 'Water Purifier' },
-      { icon: '🏕️', name: 'Shade Tarp' },
-      { icon: '🕶️', name: 'UV Goggles' },
-      { icon: '🪄', name: 'Signal Mirror' },
-      { icon: '🩹', name: 'First Aid Kit' },
+      { icon: '💧', name: 'water bottle', key: 'water_bottle' },
+      { icon: '🧭', name: 'compass', key: 'compass' },
+      { icon: '⛺', name: 'tent', key: 'tent' },
+      { icon: '🧴', name: 'sunscreen', key: 'sunscreen' },
+      { icon: '🥽', name: 'goggles', key: 'goggles' },
+      { icon: '🐪', name: 'camel', key: 'camel' },
+      { icon: '🗺️', name: 'map', key: 'map' },
+      { icon: '🤠', name: 'hat', key: 'hat' },
+      { icon: '🔪', name: 'knife', key: 'knife' },
+      { icon: '🧨', name: 'flare', key: 'flare' },
     ],
   },
 ]
 
 export default function Round3Page({ gameState, onComplete }) {
   // phases: 'choose' → 'mission' → 'result'
-  const [phase, setPhase]               = useState('choose')
+  const [phase, setPhase] = useState('choose')
   const [selectedDoor, setSelectedDoor] = useState(null)
-  const [imageFile, setImageFile]       = useState(null)
+  const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
-  const [dragOver, setDragOver]         = useState(false)
-  const [analyzing, setAnalyzing]       = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
   const [analyzeProgress, setAnalyzeProgress] = useState(0)
-  const [itemScores, setItemScores]     = useState({})
-  const [totalScore, setTotalScore]     = useState(null)
+  const [itemScores, setItemScores] = useState({})
+  const [totalScore, setTotalScore] = useState(null)
   const fileRef = useRef()
 
   const door = DOORS.find(d => d.id === selectedDoor)
@@ -86,33 +101,97 @@ export default function Round3Page({ gameState, onComplete }) {
     reader.readAsDataURL(file)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!imageFile) return
     setAnalyzing(true)
     setAnalyzeProgress(0)
-    let prog = 0
-    const iv = setInterval(() => {
-      prog += Math.random() * 9
-      if (prog >= 100) {
-        prog = 100
-        clearInterval(iv)
-        // Simulated detection — replace with real API call
-        const scores = {}
-        door.requiredItems.forEach(item => {
-          scores[item.name] = Math.random() > 0.2
-        })
-        const detected = Object.values(scores).filter(Boolean).length
-        setItemScores(scores)
-        setTotalScore(detected * 20)
-        setAnalyzing(false)
-        setPhase('result')
-      }
-      setAnalyzeProgress(Math.min(100, Math.floor(prog)))
-    }, 120)
+    setItemScores({})
+    setTotalScore(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('image', imageFile)
+      formData.append('terrain', selectedDoor)
+
+      const response = await fetch('http://localhost:8000/api/evaluate/round3', {
+        method: 'POST',
+        body: formData
+      })
+      const result = await response.json()
+
+      setAnalyzeProgress(100)
+      setItemScores(result.details || {})
+      setTotalScore(result.score)
+      setAnalyzing(false)
+      setPhase('result')
+
+    } catch (e) {
+      console.error(e)
+      setAnalyzeProgress(100)
+      setItemScores({})
+      setTotalScore(0)
+      setAnalyzing(false)
+      setPhase('result')
+    }
   }
 
   return (
     <div className="r3-root">
+
+      {/* ══════════════ EVALUATOR LOADING OVERLAY ══════════════ */}
+      <AnimatePresence>
+        {analyzing && (
+          <motion.div
+            className="r3-eval-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="r3-eval-card"
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            >
+              <motion.div
+                className="r3-eval-spinner"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
+                style={{ color: door ? door.color : '#1a9fd4' }}
+              >
+                {door ? door.emoji : '🔍'}
+              </motion.div>
+
+              <motion.h3
+                className="r3-eval-title font-heading"
+                style={{ color: door ? door.color : '#1a9fd4' }}
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity }}
+              >
+                Gemini AI Evaluating…
+              </motion.h3>
+
+              <p className="r3-eval-sub">
+                Scanning your survival image for items. Please wait — this may take a few seconds.
+              </p>
+
+              <div className="r3-eval-bar-track">
+                <motion.div
+                  className="r3-eval-bar-fill"
+                  style={{ background: `linear-gradient(90deg, transparent, ${door ? door.color : '#1a9fd4'}, transparent)` }}
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              </div>
+
+              <p className="r3-eval-tip">Do not close or refresh the page.</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
 
         {/* ══════════════════════════════════
@@ -298,7 +377,7 @@ export default function Round3Page({ gameState, onComplete }) {
                       </div>
                       <div className="r3-prog-track">
                         <motion.div className="r3-prog-fill"
-                          style={{ background: `linear-gradient(90deg, ${door.colorDim.replace('0.14','0.4')}, ${door.color})` }}
+                          style={{ background: `linear-gradient(90deg, ${door.colorDim.replace('0.14', '0.4')}, ${door.color})` }}
                           animate={{ width: `${analyzeProgress}%` }}
                           transition={{ duration: 0.2 }}
                         />
@@ -369,14 +448,17 @@ export default function Round3Page({ gameState, onComplete }) {
 
                 <h2 className="r3-result-title font-display" style={{ color: door.color }}>
                   {totalScore >= 100 ? 'PERFECT ESCAPE!'
-                    : totalScore >= 80 ? 'GREAT ESCAPE!'
-                    : totalScore >= 60 ? 'SURVIVED!'
-                    : totalScore >= 40 ? 'BARELY MADE IT'
-                    : 'LOST IN THE WILD'}
+                    : totalScore >= 80 ? 'MISSION PASSED!'
+                      : totalScore >= 60 ? 'SURVIVED!'
+                        : totalScore >= 40 ? 'BARELY MADE IT'
+                          : 'LOST IN THE WILD'}
                 </h2>
 
                 <p className="r3-result-sub">
-                  {Object.values(itemScores).filter(Boolean).length} of 5 items detected in
+                  Score: <strong style={{ color: totalScore >= 80 ? '#2ecc71' : '#e85a1e', fontSize: '1.1rem' }}>
+                    {totalScore} / 100 &nbsp;
+                    {totalScore >= 80 ? '✅ PASS' : '❌ FAIL'}
+                  </strong> — {Object.values(itemScores).filter(Boolean).length} of 10 items detected in
                   your <strong style={{ color: door.color }}>{door.label.toLowerCase()}</strong> image.
                 </p>
 
@@ -392,9 +474,9 @@ export default function Round3Page({ gameState, onComplete }) {
                 {/* Detection breakdown */}
                 <div className="r3-detect-list">
                   {door.requiredItems.map((item, i) => {
-                    const detected = itemScores[item.name]
+                    const detected = itemScores[item.key]
                     return (
-                      <motion.div key={item.name} className="r3-detect-row"
+                      <motion.div key={item.key} className="r3-detect-row"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.07 }}>
@@ -402,7 +484,7 @@ export default function Round3Page({ gameState, onComplete }) {
                           {String(i + 1).padStart(2, '0')}
                         </span>
                         <span className="r3-detect-icon">{item.icon}</span>
-                        <span className="r3-detect-name">{item.name}</span>
+                        <span className="r3-detect-name" style={{ textTransform: 'capitalize' }}>{item.name}</span>
                         <div className="r3-detect-right">
                           <span className="r3-detect-pts font-heading"
                             style={{ color: detected ? '#2ecc71' : '#e85a1e' }}>
@@ -419,13 +501,16 @@ export default function Round3Page({ gameState, onComplete }) {
 
                 {/* Total score */}
                 <div className="r3-result-total" style={{ borderColor: `${door.color}44` }}>
-                  <span className="r3-result-total-label font-heading">FINAL SCORE</span>
+                  <span className="r3-result-total-label font-heading">FINAL SCORE (Gemini)</span>
                   <motion.span className="r3-result-total-val font-display"
                     style={{ color: totalScore >= 80 ? '#2ecc71' : totalScore >= 60 ? door.color : '#e85a1e' }}
                     initial={{ scale: 0 }} animate={{ scale: 1 }}
                     transition={{ type: 'spring', stiffness: 200, delay: 0.4 }}>
                     {totalScore} / 100
                   </motion.span>
+                  <span style={{ fontSize: '0.85rem', color: totalScore >= 80 ? '#2ecc71' : '#e85a1e', fontWeight: 700 }}>
+                    {totalScore >= 80 ? '✅ PASS' : '❌ FAIL (need ≥ 80)'}
+                  </span>
                 </div>
 
                 <motion.button className="r3-final-btn"
