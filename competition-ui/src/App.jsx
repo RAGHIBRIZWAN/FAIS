@@ -24,6 +24,7 @@ export default function App() {
     round1Time: null,
     round2Time: null,
     round3Time: null,
+    totalSubmissions: 0,
   })
 
   const navigate = (page, updates = {}) => {
@@ -47,6 +48,8 @@ export default function App() {
             <Round1Page
               gameState={gameState}
               onComplete={(score) => navigate('round2', { round1Score: score, score: gameState.score + score, round1Time: Date.now() })}
+              onTimeUp={(score) => navigate('complete', { round1Score: score, score: gameState.score + score, round1Time: Date.now() })}
+              onSubmission={() => setGameState(prev => ({ ...prev, totalSubmissions: prev.totalSubmissions + 1 }))}
             />
           </motion.div>
         )}
@@ -55,7 +58,9 @@ export default function App() {
             <Round2Page
               gameState={gameState}
               onComplete={(score) => navigate('round3', { round2Score: score, score: gameState.score + score, round2Time: Date.now() })}
+              onTimeUp={(score) => navigate('complete', { round2Score: score, score: gameState.score + score, round2Time: Date.now() })}
               onHealthChange={(delta) => setGameState(prev => ({ ...prev, playerHealth: Math.max(0, prev.playerHealth + delta) }))}
+              onSubmission={() => setGameState(prev => ({ ...prev, totalSubmissions: prev.totalSubmissions + 1 }))}
             />
           </motion.div>
         )}
@@ -64,6 +69,8 @@ export default function App() {
             <Round3Page
               gameState={gameState}
               onComplete={(score) => navigate('complete', { round3Score: score, score: gameState.score + score, round3Time: Date.now() })}
+              onTimeUp={(score) => navigate('complete', { round3Score: score, score: gameState.score + score, round3Time: Date.now() })}
+              onSubmission={() => setGameState(prev => ({ ...prev, totalSubmissions: prev.totalSubmissions + 1 }))}
             />
           </motion.div>
         )}
@@ -72,7 +79,7 @@ export default function App() {
             <CompletePage
               gameState={gameState}
               onRestart={() => {
-                setGameState({ playerHealth: 100, score: 0, round1Score: null, round2Score: null, round3Score: null, startTime: null })
+                setGameState({ playerHealth: 100, score: 0, round1Score: null, round2Score: null, round3Score: null, startTime: null, totalSubmissions: 0 })
                 setCurrentPage('landing')
               }}
             />

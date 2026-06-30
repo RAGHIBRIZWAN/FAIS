@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Timer from '../components/Timer.jsx'
 import './Round3Page.css'
 
 /* ── Fixed terrain data — no selection, items are predefined ── */
@@ -12,6 +13,7 @@ const DOORS = [
     color: '#1a9fd4',
     colorDim: 'rgba(26,159,212,0.14)',
     image: '/images/ocean.png',
+    bgImage: '/images/ocean1.png',
     requiredItems: [
       { icon: '🛥️', name: 'boat', key: 'boat' },
       { icon: '🛶', name: 'paddle', key: 'paddle' },
@@ -33,6 +35,7 @@ const DOORS = [
     color: '#a0b8cc',
     colorDim: 'rgba(160,184,204,0.14)',
     image: '/images/mountain.png',
+    bgImage: '/images/mountain1.png',
     requiredItems: [
       { icon: '🪢', name: 'rope', key: 'rope' },
       { icon: '⛏️', name: 'ice axe', key: 'ice_axe' },
@@ -54,6 +57,7 @@ const DOORS = [
     color: '#d4902a',
     colorDim: 'rgba(212,144,42,0.14)',
     image: '/images/desert.png',
+    bgImage: '/images/desert1.png',
     requiredItems: [
       { icon: '💧', name: 'water bottle', key: 'water_bottle' },
       { icon: '🧭', name: 'compass', key: 'compass' },
@@ -69,7 +73,7 @@ const DOORS = [
   },
 ]
 
-export default function Round3Page({ gameState, onComplete }) {
+export default function Round3Page({ gameState, onComplete, onTimeUp, onSubmission }) {
   // phases: 'choose' → 'mission' → 'result'
   const [phase, setPhase] = useState('choose')
   const [selectedDoor, setSelectedDoor] = useState(null)
@@ -103,6 +107,7 @@ export default function Round3Page({ gameState, onComplete }) {
 
   const handleSubmit = async () => {
     if (!imageFile) return
+    if (onSubmission) onSubmission()
     setAnalyzing(true)
     setAnalyzeProgress(0)
     setItemScores({})
@@ -137,6 +142,11 @@ export default function Round3Page({ gameState, onComplete }) {
 
   return (
     <div className="r3-root">
+
+      {/* Global Timer for Round 3 */}
+      <div style={{ position: 'absolute', top: 6, right: 20, zIndex: 50 }}>
+        <Timer initialSeconds={1500} running={totalScore !== 100} onExpire={() => onTimeUp(totalScore || 0)} />
+      </div>
 
       {/* ══════════════ EVALUATOR LOADING OVERLAY ══════════════ */}
       <AnimatePresence>
@@ -284,42 +294,13 @@ export default function Round3Page({ gameState, onComplete }) {
             {/* Two-column layout */}
             <div className="r3-mission-body">
 
-              {/* LEFT — Required items briefing */}
+              {/* LEFT — Image replacement */}
               <motion.div className="r3-mission-brief"
                 initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.15 }}>
-
-                <div className="r3-brief-top">
-                  <div className="r3-brief-terrain-tag font-heading" style={{ color: door.color }}>
-                    {door.emoji}&nbsp;&nbsp;{door.label}
-                  </div>
-                  <p className="r3-brief-instruction">
-                    Generate an AI image containing all <strong style={{ color: door.color }}>5 required items</strong> in
-                    a {door.label.toLowerCase()} environment, then upload it below.
-                    Each correctly detected item scores <strong style={{ color: door.color }}>20 points</strong>.
-                  </p>
-                </div>
-
-                <div className="r3-brief-divider" style={{ borderColor: `${door.color}44` }} />
-
-                <div className="r3-brief-items-title font-heading">OBJECTIVES</div>
-
-                <div className="r3-brief-hidden-row">
-                  <span className="r3-brief-hidden-icon">🔒</span>
-                  <p className="r3-brief-hidden-text">
-                    Generate an image containing <strong style={{ color: door.color }}>5 survival items</strong> suited to a {door.label.toLowerCase()} environment.
-                    The required items are concealed — detection happens after submission.
-                  </p>
-                </div>
-
-                <div className="r3-brief-score-row">
-                  <span style={{ fontSize: '0.72rem', color: 'var(--color-text-dim)' }}>
-                    Detect all 5 →
-                  </span>
-                  <span className="font-heading" style={{ fontSize: '1.1rem', color: '#2ecc71', fontWeight: 700 }}>
-                    100 / 100
-                  </span>
-                </div>
+                transition={{ delay: 0.15 }}
+                style={{ padding: 0, overflow: 'hidden' }}
+              >
+                <img src={door.bgImage} alt={`${door.label} terrain`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               </motion.div>
 
               {/* RIGHT — Upload */}
@@ -458,8 +439,7 @@ export default function Round3Page({ gameState, onComplete }) {
                   Score: <strong style={{ color: totalScore >= 80 ? '#2ecc71' : '#e85a1e', fontSize: '1.1rem' }}>
                     {totalScore} / 100 &nbsp;
                     {totalScore >= 80 ? '✅ PASS' : '❌ FAIL'}
-                  </strong> — {Object.values(itemScores).filter(Boolean).length} of 10 items detected in
-                  your <strong style={{ color: door.color }}>{door.label.toLowerCase()}</strong> image.
+                  </strong>
                 </p>
 
                 {/* Submitted image */}
@@ -470,34 +450,6 @@ export default function Round3Page({ gameState, onComplete }) {
                       style={{ background: `linear-gradient(180deg, transparent 40%, ${door.colorDim} 100%)` }} />
                   </div>
                 )}
-
-                {/* Detection breakdown */}
-                <div className="r3-detect-list">
-                  {door.requiredItems.map((item, i) => {
-                    const detected = itemScores[item.key]
-                    return (
-                      <motion.div key={item.key} className="r3-detect-row"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.07 }}>
-                        <span className="r3-detect-num font-heading" style={{ color: door.color }}>
-                          {String(i + 1).padStart(2, '0')}
-                        </span>
-                        <span className="r3-detect-icon">{item.icon}</span>
-                        <span className="r3-detect-name" style={{ textTransform: 'capitalize' }}>{item.name}</span>
-                        <div className="r3-detect-right">
-                          <span className="r3-detect-pts font-heading"
-                            style={{ color: detected ? '#2ecc71' : '#e85a1e' }}>
-                            {detected ? '+20' : '+0'}
-                          </span>
-                          <span className="r3-detect-badge">
-                            {detected ? '✅' : '❌'}
-                          </span>
-                        </div>
-                      </motion.div>
-                    )
-                  })}
-                </div>
 
                 {/* Total score */}
                 <div className="r3-result-total" style={{ borderColor: `${door.color}44` }}>
@@ -513,11 +465,27 @@ export default function Round3Page({ gameState, onComplete }) {
                   </span>
                 </div>
 
-                <motion.button className="r3-final-btn"
-                  onClick={() => onComplete(totalScore)}
-                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  🏆 View Final Results
-                </motion.button>
+                <div className="r3-result-actions" style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '16px' }}>
+                  {totalScore < 100 && (
+                    <motion.button className="r3-final-btn"
+                      style={{ background: 'linear-gradient(135deg, #2b3a42, #3b4d58, #2b3a42)', flex: 1 }}
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                        setTotalScore(null);
+                        setPhase('mission');
+                      }}
+                      whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                      🔄 Resubmit
+                    </motion.button>
+                  )}
+                  <motion.button className="r3-final-btn"
+                    style={{ flex: 1 }}
+                    onClick={() => onComplete(totalScore)}
+                    whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    🏆 Finish
+                  </motion.button>
+                </div>
               </motion.div>
             </div>
           </motion.div>

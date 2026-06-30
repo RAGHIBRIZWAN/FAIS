@@ -29,12 +29,12 @@ The final piece reveals itself.
 Name the treasure sealed within.
 `
 
-export default function Round2Page({ gameState, onComplete }) {
+export default function Round2Page({ gameState, onComplete, onHealthChange, onTimeUp, onSubmission }) {
   // phase: 'encounter' → 'verify' → 'battle'
   const [phase, setPhase] = useState('encounter')
   const [playerHealth, setPlayerHealth] = useState(100)
   const [enemyHealth, setEnemyHealth] = useState(90)
-  const [timeLeft, setTimeLeft] = useState(120) // 2:00
+  const [timeLeft, setTimeLeft] = useState(1500) // 25:00
   const [battleTime, setBattleTime] = useState(45)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
@@ -55,11 +55,14 @@ export default function Round2Page({ gameState, onComplete }) {
 
   /* ── Encounter timer ── */
   useEffect(() => {
-    if (phase !== 'encounter') return
-    if (timeLeft <= 0) return
+    if (phase === 'battle' || geminiScore >= 80) return
+    if (timeLeft <= 0) {
+      onTimeUp(geminiScore || 0)
+      return
+    }
     const id = setInterval(() => setTimeLeft(t => t - 1), 1000)
     return () => clearInterval(id)
-  }, [phase, timeLeft])
+  }, [phase, timeLeft, geminiScore, onTimeUp])
 
   /* ── Battle timer ── */
   useEffect(() => {
@@ -97,6 +100,7 @@ export default function Round2Page({ gameState, onComplete }) {
 
   const handleAnalyze = async () => {
     if (!imageFile) return
+    if (onSubmission) onSubmission()
     setAnalyzing(true)
     setAnalyzeProgress(0)
     setGeminiScore(null)
@@ -206,6 +210,16 @@ export default function Round2Page({ gameState, onComplete }) {
         )}
       </AnimatePresence>
 
+      {/* ── Timer (top-left badge) - show in encounter and verify ── */}
+      {phase !== 'battle' && (
+        <div className="r2-timer-badge">
+          <div className="r2-timer-label">TIME REMAINING</div>
+          <div className={`r2-timer-val ${timeLeft < 30 ? 'danger' : ''}`}>
+            {formatTime(timeLeft)}
+          </div>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
 
         {/* ═══════════════════════════════════════
@@ -227,14 +241,6 @@ export default function Round2Page({ gameState, onComplete }) {
             {/* ── Top bar ── */}
             <div className="r2-topbar">
               <span className="r2-round-title font-heading">ROUND 2 — ATTACKER ENCOUNTER</span>
-            </div>
-
-            {/* ── Timer (top-left badge) ── */}
-            <div className="r2-timer-badge">
-              <div className="r2-timer-label">TIME REMAINING</div>
-              <div className={`r2-timer-val ${timeLeft < 30 ? 'danger' : ''}`}>
-                {formatTime(timeLeft)}
-              </div>
             </div>
 
             {/* ── Attacker figure (left side) ── */}
@@ -470,16 +476,35 @@ export default function Round2Page({ gameState, onComplete }) {
                     </p>
 
                     {geminiScore !== null && (
-                      <motion.button
-                        className="r2-battle-btn"
-                        onClick={handleProceedToBattle}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                      >
-                        ⚔️ Launch Battle!
-                      </motion.button>
+                      geminiScore >= 80 ? (
+                        <motion.button
+                          className="r2-battle-btn"
+                          onClick={handleProceedToBattle}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          ⚔️ Launch Battle!
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          className="r2-battle-btn"
+                          style={{ background: 'linear-gradient(135deg, #2b3a42, #3b4d58, #2b3a42)', border: '1px solid #5a7585' }}
+                          onClick={() => {
+                            setImageFile(null);
+                            setImagePreview(null);
+                            setGeminiScore(null);
+                            setPhase('encounter');
+                          }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          🔄 Retry Submission
+                        </motion.button>
+                      )
                     )}
                   </>
                 ) : (
@@ -506,8 +531,13 @@ export default function Round2Page({ gameState, onComplete }) {
             onClick={handleShoot}
             style={{ cursor: 'crosshair' }}
           >
-            {/* Battle BG — attacker fills full screen */}
-            <div className="r2-battle-bg" />
+            {/* Battle BG — battle.png image */}
+            <img src="/images/battle.png" alt="Battle" style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover', objectPosition: 'center',
+              zIndex: 0, pointerEvents: 'none'
+            }} />
 
             {/* Red hit flash */}
             <AnimatePresence>
@@ -579,23 +609,7 @@ export default function Round2Page({ gameState, onComplete }) {
               <div className="r2-crosshair-dot" />
             </div>
 
-            {/* Attacker — full screen */}
-            <motion.div
-              className="r2-battle-attacker"
-              animate={{
-                scale: [1, 1.015, 1],
-                filter: [
-                  'drop-shadow(0 0 20px rgba(231,76,60,0.5)) brightness(0.88)',
-                  'drop-shadow(0 0 55px rgba(231,76,60,1.0)) brightness(1.05)',
-                  'drop-shadow(0 0 20px rgba(231,76,60,0.5)) brightness(0.88)',
-                ]
-              }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            >
-              <img src="/images/ghost.png" alt="enemy" className="r2-battle-enemy-img"
-                onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block' }} />
-              <div style={{ display: 'none', fontSize: '12rem', textAlign: 'center', lineHeight: '100vh' }}>🧟</div>
-            </motion.div>
+
 
             {/* Gun silhouette — points toward attacker */}
             <div className="r2-gun-wrap">

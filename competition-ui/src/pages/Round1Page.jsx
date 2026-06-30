@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Timer from '../components/Timer.jsx'
 import './Round1Page.css'
 
-export default function Round1Page({ gameState, onComplete }) {
+export default function Round1Page({ gameState, onComplete, onTimeUp, onSubmission }) {
   // Phase: 'explore' → 'lock' → 'submit' → 'result'
   const [phase, setPhase] = useState('explore')
   const [windowFound, setWindowFound] = useState(false)
@@ -35,6 +35,7 @@ export default function Round1Page({ gameState, onComplete }) {
   /* ── Submit / analyze ── */
   const handleSubmit = async () => {
     if (!imageFile) return
+    if (onSubmission) onSubmission()
     setAnalyzing(true)
     setTotalScore(null)
 
@@ -123,7 +124,7 @@ export default function Round1Page({ gameState, onComplete }) {
             ROUND 1 — EXPLORE THE ROOM
           </span>
         </div>
-        <Timer initialSeconds={525} running={phase === 'explore' || phase === 'lock'} />
+        <Timer initialSeconds={1500} running={!(totalScore >= 80)} onExpire={() => onTimeUp(totalScore || 0)} />
       </div>
 
       {/* ══════════════ MAIN SCENE ══════════════ */}
@@ -344,16 +345,35 @@ export default function Round1Page({ gameState, onComplete }) {
                               : 'The key does not fit. Score must be ≥ 80 to pass.'}
                           </p>
 
-                          <motion.button
-                            className="r1-battle-btn"
-                            onClick={() => onComplete(totalScore)}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                          >
-                            ⚔️ Proceed to Round 2
-                          </motion.button>
+                          {totalScore >= 80 ? (
+                            <motion.button
+                              className="r1-battle-btn"
+                              onClick={() => onComplete(totalScore)}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                            >
+                              ⚔️ Proceed to Round 2
+                            </motion.button>
+                          ) : (
+                            <motion.button
+                              className="r1-battle-btn"
+                              style={{ background: 'linear-gradient(135deg, #2b3a42, #3b4d58, #2b3a42)', border: '1px solid #5a7585' }}
+                              onClick={() => {
+                                setImageFile(null);
+                                setImagePreview(null);
+                                setTotalScore(null);
+                                setPhase('submit');
+                              }}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                            >
+                              🔄 Retry Submission
+                            </motion.button>
+                          )}
                         </>
                       ) : (
                         <div className="r1-results-empty">
